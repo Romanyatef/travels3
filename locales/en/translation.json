@@ -23,7 +23,7 @@
     "enterPromo": "please enter the promo code",
     "enterLink": "please enter a valid link",
     "noLinkv": "there is no general setings",
-    "noLink": "there is no link to delete",
+    "noLink": "there is no general settings to delete",
     "complainsNotExists": "there is not any complains",
     "visaNotExists": "visa card not exists",
     "visaExists": "this visa is already exists",
@@ -78,8 +78,7 @@
     "tLinkNotExists": "please enter a valid twitter link",
     "lLinkNotExists": "please enter a valid linkedin link",
 
-    "adressARNotExists": "please enter an adress in arabic",
-    "adressENNotExists": "please enter an adress in english",
+    "adressNotExists": "please enter address link",
     "hourStartNotExists": "please enter the hour of start of work",
     "hourEndNotExists": "please enter the hour of end of work",
     "dayStartNotExists": "please enter the start day of work",

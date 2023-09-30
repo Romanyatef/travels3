@@ -32,7 +32,6 @@ const query = util.promisify(conn.query).bind(conn); //transform query into a pr
 //     const data = await query("select * from ? where type = ?  limit ? offset ? ", [tableName, user, limit, startIndex])
 //     return data;
 // }
-
 const paginatedResults = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
     const user = "user";
@@ -128,7 +127,7 @@ router6.post("/viewusers", adminAuth, async (req, res) => {
             status: true,
             code: 200,
             msg: "",
-            data: {...data},
+            data: data,
             errors: {},
         });
 

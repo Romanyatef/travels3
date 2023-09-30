@@ -14,8 +14,6 @@ const query = util.promisify(conn.query).bind(conn);//transform query into a pro
 
 
 const generalValidationRules = [
-    body('adressAR').isString().withMessage("validation.adressARNotExists"),
-    body('adressEN').isString().withMessage("validation.adressENNotExists"),
     body('phone').isString().withMessage("validation.phoneNotExists"),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('lLink').custom((value) => {
@@ -26,6 +24,13 @@ const generalValidationRules = [
         return true;
     }),
 
+    body('adressLink').custom((value) => {
+        let googleRegex = /^https:\/\/www\.google\.com\/maps\/place\/(.*)$/
+        if (!googleRegex.test(value)) {
+            throw new Error('validation.adressNotExists');
+        }
+        return true;
+    }),
     body('wLink').custom((value) => {
         const whatsappRegex = /^https?:\/\/(www\.)?.+\.whatsapp\.com\//i;
         if (!whatsappRegex.test(value)) {
@@ -110,7 +115,7 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
                 },
             });
         }
-        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressEN, adressAR, nationalityID } = req.body
+        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressLink, nationalityID } = req.body
 
         const date1 = new Date(`2000-01-01 ${hourEnd}`);
         const date2 = new Date(`2000-01-01 ${hourStart}`);
@@ -153,8 +158,8 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
             dayEnd: dayEnd,
             dayStart: dayStart,
             phone: phone,
-            adressAR: adressAR,
-            adressEN: adressEN
+            adressLink: adressLink
+
         }
         await query("update variety set ? where id=2", subject);
         return res.status(200).json({
@@ -207,16 +212,29 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
 router3.delete("/delete", adminAuth, async (req, res) => {//completed
     try {
         const termsexists = await query("select * from variety where id=2");
-        if (!termsexists[0].link) {
-            return res.status(200).json({
-                status: true,
-                code: 200,
+        if (!termsexists[0].wLink) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
                 msg: req.t("error.noLink"),
                 data: {},
                 errors: {}
             })
         }
-        await query("update variety set link = NULL  where id=2");
+        const subject = {
+            tLink: null,
+            lLink: null,
+            fLink: null,
+            wLink: null,
+            hourEnd: null,
+            hourStart: null,
+            dayEnd: null,
+            dayStart: null,
+            phone: null,
+            adressLink: null
+
+        }
+        await query("update variety set  ? where id=2",subject);
         return res.status(200).json({
             status: true,
             code: 200,
@@ -225,6 +243,7 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
             errors: {}
         })
     } catch (err) {
+        console.log(err);
         return res.status(500).json({
             status: false,
             code: 500,

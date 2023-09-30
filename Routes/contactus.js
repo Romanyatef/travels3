@@ -8,7 +8,25 @@ const adminAuth = require("../middleware/admin");
 const phoneNumber = require('libphonenumber-js');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
 
+const paginatedResults = async (tableName, page, limit) => {
+    const startIndex = (page - 1) * limit;
+    const query2 = `select * from ${tableName} limit ? offset ?`;
+    const result = await query(query2, [limit, startIndex]);
+    const userData = {
+        result: result,
+        statusPrevious: true,
+        statusNext: true
+    }
+    if (startIndex == 0) {
+        userData.statusPrevious = false
+    }
+    if (result.length < limit) {
+        userData.statusNext = false
+    }
 
+
+    return userData;
+};
 
 const otpValidationRules = [
     body('userName')
@@ -22,7 +40,6 @@ const otpValidationRules = [
     body('email').isEmail().withMessage('validation.emailNotExists'),
     body('phone').isString().withMessage("validation.phoneNotExists"),
     body('subject').isString().withMessage('validation.subjectNotExists'),
-    body('countryCode').notEmpty().withMessage("validation.countryCodeNotExists")
 ];
 
 router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {
@@ -45,7 +62,7 @@ router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {
         }
         const { countryCode, phone,email, userName, subject } = req.body
         const user = res.locals.user;
-        const isValid2 = phoneNumber.isValidNumber(countryCode+ phone);
+        const isValid2 = phoneNumber.isValidNumber( phone);
         if (!isValid2) {
             return res.status(400).json({
                 status: false,
@@ -58,7 +75,6 @@ router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {
         const complain = {
             userid: user.id,
             phone: phone,
-            countryCode:countryCode,
             userName: userName,
             subject: subject,
             email:email
@@ -88,19 +104,33 @@ const alter = async (e) => {
 }
 router6.get("/solve", adminAuth, async (req, res) => {
     try {
-        const complaints = await query("select * from contactus");
-        if (complaints[0]) {
+        const { page, limit } = req.query;
+        if (!(limit || page)) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.limitPage"),
+                data: {},
+                errors: {},
+            });
+        }
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const complaints = await paginatedResults("contactus", pageNumber, limitNumber)
+        console.log(complaints);
+        if (complaints.result[0]) {
 
-            await Promise.all(complaints.map(alter));
-
+            await Promise.all(complaints.result.map(alter));
+            
             return res.status(200).json({
                 status: true,
                 code: 200,
                 msg: "",
-                data: { ...complaints },
+                data: complaints,
                 errors: {},
             });
         }
+
         return res.status(404).json({
             status: false,
             code: 404,
