@@ -7,21 +7,93 @@ const crypto = require("crypto");
 const CryptoJS = require('crypto-js');
 const adminAuth = require("../middleware/admin");
 const fs = require("fs");
+const phoneNumber = require('libphonenumber-js')
 
 const query = util.promisify(conn.query).bind(conn);//transform query into a promise to use [await/async]
 
 
 
-const creditValidationRules = [
-    body('link').isURL().withMessage("validation.enterLink")
+const generalValidationRules = [
+    body('adressAR').isString().withMessage("validation.adressARNotExists"),
+    body('adressEN').isString().withMessage("validation.adressENNotExists"),
+    body('phone').isString().withMessage("validation.phoneNotExists"),
+    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
+    body('lLink').custom((value) => {
+        const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\//i;
+        if (!linkedinRegex.test(value)) {
+            throw new Error('validation.lLinkNotExists');
+        }
+        return true;
+    }),
+
+    body('wLink').custom((value) => {
+        const whatsappRegex = /^https?:\/\/(www\.)?.+\.whatsapp\.com\//i;
+        if (!whatsappRegex.test(value)) {
+            throw new Error('validation.wLinkNotExists');
+        }
+        return true;
+    }),
+
+    body('fLink').custom((value) => {
+        const facebookRegex = /^https?:\/\/(www\.)?facebook\.com\//i;
+        if (!facebookRegex.test(value)) {
+            throw new Error('validation.fLinkNotExists');
+        }
+        return true;
+    }),
+
+    body('tLink').custom((value) => {
+        const twitterRegex = /^https?:\/\/(www\.)?twitter\.com\//i;
+        if (!twitterRegex.test(value)) {
+            throw new Error('validation.tLinkNotExists');
+        }
+        return true;
+    }),   
+    body('dayStart')
+        .custom((value, { req }) => {
+            if (isNaN(parseInt(value)) || (!(value.length == 1))) {
+
+                throw new Error("validation.dayStartNotExists");
+            }
+            return true;
+        }),
+    body('dayEnd')
+        .custom((value, { req }) => {
+            if (isNaN(parseInt(value)) || (!(value.length == 1))) {
+
+                throw new Error("validation.dayEndNotExists");
+            }
+            return true;
+        }),
+    body('hourStart')
+        .custom((value) => {
+            // "HH:mm:ss"
+            const hours = parseInt(value.substring(0, 2))
+            const minutes = parseInt(value.substring(2, 4))
+            const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+            if (!timeRegex.test(value) || hours >= 24 || minutes > 60) {
+                throw new Error('validation.hourStartNotExists');
+            }
+            return true;
+        }),
+    body('hourEnd')
+        .custom((value, { req }) => {
+            // "HH:mm:ss"
+                const hours = parseInt(value.substring(0, 2))
+                const minutes = parseInt(value.substring(2, 4))
+                const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+                if (!timeRegex.test(value) || hours > 24 || minutes > 60) {
+                    throw new Error('validation.hourEndNotExists');
+                }
+                return true;
+        }),
 ]
 
 
-//==========================================  add link ==========================================//
+//==========================================  add general settings ==========================================//
 
-router3.post("/add", adminAuth, creditValidationRules, async (req, res) => {//completed
+router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//completed
     try {
-        const { link } = req.body
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorlink = errors.array()
@@ -34,24 +106,56 @@ router3.post("/add", adminAuth, creditValidationRules, async (req, res) => {//co
                 code: 400,
                 data: {},
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors
                 },
             });
         }
-        const termsexists = await query("select * from variety where id=2");
-        if (termsexists[0]) {
-            if (termsexists[0].link) {
-                await query("update variety set  link = ? where id=2", link);//order by conditions
-                return res.status(200).json({
-                    status: true,
-                    code: 200,
-                    msg: req.t("updated"),
-                    data: {},
-                    errors: {}
-                })
-            }
+        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressEN, adressAR, nationalityID } = req.body
+
+        const date1 = new Date(`2000-01-01 ${hourEnd}`);
+        const date2 = new Date(`2000-01-01 ${hourStart}`);
+        const timeDifference = (Math.abs(date2 - date1)) / (1000 * 60 * 60);
+
+        if (timeDifference < 6 || date1 < date2) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.hourdifference"),
+                data: {},
+                errors: {}
+            });
         }
-        const subject = { link: link }
+        const countryCode = await query("select countryCode from nationalities where id=?", nationalityID)
+        if (!countryCode[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {
+                    nationality: req.t("error.noNationality")
+                }
+
+            })
+        }
+        const isValid2 = phoneNumber.isValidNumber(countryCode[0].countryCode + phone);
+        if (!isValid2) {
+            observer.status = false;
+            observer.errors.phone.push(req.t("validation.phoneNotExists"));
+        }
+        const subject = {
+            tLink: tLink,
+            lLink: lLink,
+            fLink: fLink,
+            wLink: wLink,
+            hourEnd: hourEnd,
+            hourStart: hourStart,
+            dayEnd: dayEnd,
+            dayStart: dayStart,
+            phone: phone,
+            adressAR: adressAR,
+            adressEN: adressEN
+        }
         await query("update variety set ? where id=2", subject);
         return res.status(200).json({
             status: true,
@@ -72,7 +176,30 @@ router3.post("/add", adminAuth, creditValidationRules, async (req, res) => {//co
     }
 });
 
+// const { link } = req.body
 
+// const termsexists = await query("select * from variety where id=2");
+// if (termsexists[0]) {
+//     if (termsexists[0].link) {
+//         await query("update variety set  link = ? where id=2", link);//order by conditions
+//         return res.status(200).json({
+//             status: true,
+//             code: 200,
+//             msg: req.t("updated"),
+//             data: {},
+//             errors: {}
+//         })
+//     }
+// }
+// const subject = { link: link }
+// await query("update variety set ? where id=2", subject);
+// return res.status(200).json({
+//     status: true,
+//     code: 200,
+//     msg: req.t("added"),
+//     data: {},
+//     errors: {}
+// })
 
 
 //==========================================  delete link ==========================================//
@@ -114,43 +241,43 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
 
 //==========================================  update link ==========================================//
 
-router3.put("/alter", adminAuth, creditValidationRules, async (req, res) => {//completed
-    try {
-        const { link } = req.body
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
-            }));
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                data: {},
-                errors: {
-                    general: { ...translatedErrors }
-                },
-            });
-        }
-        await query("update variety set link = ?  where id=2", link);//order by conditions
-        return res.status(200).json({
-            status: true,
-            code: 200,
-            msg: req.t("updated"),
-            data: {},
-            errors: {}
-        })
-    } catch (err) {
-        return res.status(500).json({
-            status: false,
-            code: 500,
-            msg: "",
-            data: {},
-            errors: { serverError: err }
-        });
-    }
-});
+// router3.put("/alter", adminAuth, creditValidationRules, async (req, res) => {//completed
+//     try {
+//         const { link } = req.body
+//         const errors = validationResult(req);
+//         if (!errors.isEmpty()) {
+//             const errorlink = errors.array()
+//             const translatedErrors = errors.array().map(error => ({
+//                 ...error,
+//                 msg: req.t(error.msg)
+//             }));
+//             return res.status(400).json({
+//                 status: false,
+//                 code: 400,
+//                 data: {},
+//                 errors: {
+//                     general: { ...translatedErrors }
+//                 },
+//             });
+//         }
+//         await query("update variety set link = ?  where id=2", link);//order by conditions
+//         return res.status(200).json({
+//             status: true,
+//             code: 200,
+//             msg: req.t("updated"),
+//             data: {},
+//             errors: {}
+//         })
+//     } catch (err) {
+//         return res.status(500).json({
+//             status: false,
+//             code: 500,
+//             msg: "",
+//             data: {},
+//             errors: { serverError: err }
+//         });
+//     }
+// });
 
 
 
@@ -162,7 +289,7 @@ router3.get("/view", async (req, res) => {//completed
     try {
 
         const termsexists = await query("select * from variety where id=2");
-        if (!termsexists[0].link) {
+        if (!termsexists[0].lLink) {
             return res.status(200).json({
                 status: true,
                 code: 200,
@@ -171,11 +298,12 @@ router3.get("/view", async (req, res) => {//completed
                 errors: {}
             })
         }
+        delete termsexists[0].promo
         return res.status(200).json({
             status: true,
             code: 200,
             msg: "",
-            data: { link: termsexists[0].link },
+            data:termsexists[0] ,
             errors: {}
         })
     } catch (err) {

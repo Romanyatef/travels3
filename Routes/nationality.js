@@ -36,7 +36,7 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
                 code: 400,
                 data: {},
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -173,7 +173,7 @@ router3.put("/alter", adminAuth, nationalityUpdateValidationRules, async (req, r
                 code: 400,
                 data: {},
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }

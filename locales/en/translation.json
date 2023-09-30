@@ -22,7 +22,7 @@
     "noPromo": "there is no fqa to delete",
     "enterPromo": "please enter the promo code",
     "enterLink": "please enter a valid link",
-    "noLinkv": "there is no link",
+    "noLinkv": "there is no general setings",
     "noLink": "there is no link to delete",
     "complainsNotExists": "there is not any complains",
     "visaNotExists": "visa card not exists",
@@ -54,8 +54,8 @@
     "noData": "there is no user data for any other user",
     "noUserData": "there is no user data",
     "typeNotvalid": "type is must be user or admin or bus",
-
     "userIDNOTExistsID": "please select an user to see profile",
+    "hourdifference": "please enter hours that the time difference is 6 hours",
     "limitPage": "please enter page number and limit for data required",
     "notAgreeOnTerms": "please agree on terms and conditions and make sure to read them before you agree",
     "invalidAuth": "you are not authorized to access this route !"
@@ -71,7 +71,20 @@
     "cvvNotExists": "CVV number is required",
     "exprityNotExists": "exprity date is required in this formate 0000-00-00",
     "emailNotExists": "please enter a valid email",
+
     "phoneNotExists": "please enter a valid number",
+    "fLinkNotExists": "please enter a valid facebook link",
+    "wLinkNotExists": "please enter a valid whatsapp link",
+    "tLinkNotExists": "please enter a valid twitter link",
+    "lLinkNotExists": "please enter a valid linkedin link",
+
+    "adressARNotExists": "please enter an adress in arabic",
+    "adressENNotExists": "please enter an adress in english",
+    "hourStartNotExists": "please enter the hour of start of work",
+    "hourEndNotExists": "please enter the hour of end of work",
+    "dayStartNotExists": "please enter the start day of work",
+    "dayEndNotExists": "please enter the end day of work",
+
     "subjectNotExists": "subject is required",
     "countryCodeNotExists": "country Code is required",
     "homeAddressNotExists": "home address is required",

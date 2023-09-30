@@ -39,7 +39,7 @@ router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {
                 code: 400,
                 data: {},
                 errors: {
-                    general: { ...translatedErrors },
+                    general: translatedErrors 
                 },
             });
         }

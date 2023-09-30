@@ -100,7 +100,8 @@ const otpValidationRules = [
             throw new Error("validation.namelong2");
         }
         return true;
-    }), body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
+    }),
+    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('workAddress').isString().withMessage('validation.workAddressNotExists'),
     body('homeAddress').isString().withMessage('validation.homeAddressNotExists'),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
@@ -157,7 +158,7 @@ router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, 
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general:translatedErrors
                 },
             });
         }
@@ -358,7 +359,7 @@ router.post("/register", upload.single("image"), registrationValidationRules, as
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors
                 },
             });
         }
@@ -567,7 +568,7 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -582,7 +583,7 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
             delete user1.password;
             // delete user1.deviceToken;
             const host = req.get('host');
-            user1.profile_image = `http://${host}/${user1.profile_image} `
+            user1.profile_image = `http://${host}/upload/${user1.profile_image} `
             // res.status(200).json(user[0])
             return res.status(200).json({
                 status: true,
@@ -599,9 +600,9 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: "",
+                msg: req.t("error.wrongPassword"),
                 data: {},
-                errors: { password: req.t("error.wrongPassword") },
+                errors: {},
             });
         }
 
@@ -634,7 +635,7 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -719,7 +720,7 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -795,7 +796,7 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
                 code: 400,
                 data: {},
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -900,7 +901,7 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }
@@ -1172,7 +1173,7 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
                 data: {},
 
                 errors: {
-                    general: { ...translatedErrors }
+                    general: translatedErrors 
                 },
             });
         }

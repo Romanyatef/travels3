@@ -5,7 +5,7 @@ const busAuth=async (req,res,next) => {
     if (!req.headers.token) {
         return res.status(403).json({
             status: false,
-            code: 403,
+            code: 403, 
             msg: req.t("error.invalidAuth"),
             data: {},
             errors: {}

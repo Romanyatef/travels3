@@ -60,6 +60,42 @@ router2.post("/pass",userAuth,passValidationRules,async (req,res)=>{//completed
         });
     }
 });
+//==========================================  view credit card  ==========================================//
+
+router2.get("/viewcredit", userAuth,async (req,res)=>{
+    try {
+        const user1 = res.locals.user;
+        const visaexists = await query("select * from creditcard where userID =?", user1.id)
+        if (!visaexists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.visaNotExists"),
+                data: {},
+                errors: {}
+            })
+        }
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: visaexists,
+            errors: {  }
+})
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+
 
 //==========================================  add credit card  ==========================================//
 const creditValidationRules = [
@@ -71,6 +107,7 @@ const creditValidationRules = [
             }
             return true;
         }),
+    body('type').isString().withMessage("validation.typeNotExists"),
     body('cnnNumber').isNumeric().withMessage("validation.cnnNotExists"),
     body('cvv').isNumeric().withMessage("validation.cvvNotExists"),
     body('exprity').isISO8601().withMessage("validation.exprityNotExists")]
@@ -79,7 +116,7 @@ const creditValidationRules = [
 router2.post("/credit", userAuth, creditValidationRules,async (req,res)=>{
     try {
 
-        const { exprity, cvv, cnnNumber, name } = req.body;
+        const { exprity, cvv, cnnNumber, name, type } = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorlink = errors.array()
@@ -91,7 +128,6 @@ router2.post("/credit", userAuth, creditValidationRules,async (req,res)=>{
                 status: false,
                 code: 400,
                 data: {},
-
                 errors: {
                     general: { ...translatedErrors }
                 },
@@ -112,6 +148,7 @@ router2.post("/credit", userAuth, creditValidationRules,async (req,res)=>{
             exprity: exprity,
             cvv: cvv,
             cnnNumber: cnnNumber,
+            type: type,
             name: name,
             userID: user1.id
             
@@ -196,8 +233,6 @@ router2.delete("/deletecredit", autherized, creditValidationRules2,async (req,re
         });
     }
 });
-
-
 
 
 // //==========================================  send profile by token  ==========================================//
