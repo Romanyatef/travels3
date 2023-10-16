@@ -263,7 +263,6 @@ router2.post("/send",autherized,async (req,res)=>{//completed
 });
 //==========================================  delete profile   ==========================================//
 
-
 router2.delete("/deleteProfile",autherized,async (req,res)=>{
     try {
         const autherized = res.locals.autherized;
@@ -277,7 +276,8 @@ router2.delete("/deleteProfile",autherized,async (req,res)=>{
             data: {},
             errors: {},
             
-        })       
+        })
+
     } catch (err) {
         console.log(err);
         return res.status(500).json({

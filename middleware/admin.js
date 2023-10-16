@@ -19,7 +19,8 @@ const adminAuth=async (req,res,next) => {
         res.locals.admin=admin[0];
         next();
     }
-    else{
+    else {
+
         return res.status(403).json({
             status: false,
             code: 403,

@@ -258,7 +258,7 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
 
 
 
-//==========================================  update link ==========================================//
+//==========================================  update general settings ==========================================//
 
 // router3.put("/alter", adminAuth, creditValidationRules, async (req, res) => {//completed
 //     try {
@@ -302,7 +302,7 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
 
 
 
-//==========================================  view link ==========================================//
+//==========================================  view general settings ==========================================//
 
 router3.get("/view", async (req, res) => {//completed
     try {

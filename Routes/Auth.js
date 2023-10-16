@@ -14,7 +14,7 @@ const phoneNumber = require('libphonenumber-js')
 const redis = require('redis');
 const axios = require('axios');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-
+const registerAuth=require("../middleware/registerAuth.js")
 require('dotenv').config();
 
 
@@ -46,46 +46,45 @@ async function sendOTPemail(text, email = to1) {
 }
 
 async function generateOTP(token) {
-    // const buffer = Buffer.from(token, 'base64');
-    // var time = Math.floor(Date.now() / 30000); // 30-second intervals
-    // const data = Buffer.alloc(8);
-    // for (let i = 8; i--; time >>>= 8) {
-    //     data[i] = time;
-    // }
-    // const hmac = crypto.createHmac('sha1', buffer);
-    // hmac.update(data);
-    // const digest = hmac.digest();
-    // const offset = digest[digest.length - 1] & 0xf;
-    // const code = ((digest[offset] & 0x7f) << 24 |
-    //             (digest[offset + 1] & 0xff) << 16 |
-    //             (digest[offset + 2] & 0xff) << 8 |
-    //             (digest[offset + 3] & 0xff)) % 1000000;
-    // return code.toString().padStart(8, '0');
     return Math.floor(100000 + Math.random() * 900000).toString();
-
-
 }
 
 
-const redisClient = redis.createClient({
-    password: process.env.REDIS_PASSWORD,
-    socket: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT
-    }
-});
-redisClient.on('error', err => console.log('Redis Client Error', err));
-redisClient.connect();
+// const redisClient = redis.createClient({
+//     password: process.env.REDIS_PASSWORD,
+//     socket: {
+//         host: process.env.REDIS_HOST,
+//         port: process.env.REDIS_PORT
+//     }
+// });
+// redisClient.on('error', err => console.log('Redis Client Error', err));
+// redisClient.connect();
 
+// async function checkExists(phone) {
+//     const value = await redisClient.get(phone, (err) => {
+//         if (err)
+//             throw err
+//     })
+//     const returnValue = {
+//         status: true
+//     }
+//     if (value != null) {
+//         returnValue.value1 = value;
+//         return returnValue
+//     } else {
+//         returnValue.status = false
+//         return returnValue;
+//     }
+
+// }
 async function checkExists(phone) {
-    const value = await redisClient.get(phone, (err) => {
-        if (err)
-            throw err
-    })
+    const value2 = await query("select value from otpstoring where masterkey=? ", phone);
+    console.log(value2);
+    const value = value2[0]
     const returnValue = {
         status: true
     }
-    if (value != null) {
+    if (value) {
         returnValue.value1 = value;
         return returnValue
     } else {
@@ -93,6 +92,16 @@ async function checkExists(phone) {
         return returnValue;
     }
 
+}
+async function insertvalue(masterkey, value) {
+    const pair = {
+        masterkey: masterkey,
+        value: value
+    }
+    await query("insert into otpstoring set ?", pair);
+}
+async function deletevalue(masterkey) {
+    await query("delete from otpstoring where masterkey=?", masterkey);
 }
 const otpValidationRules = [
     body('userName').custom((value, { req }) => {
@@ -110,7 +119,7 @@ const otpValidationRules = [
     body('phone').isNumeric().withMessage('validation.phoneNotExists'),
 ];
 
-router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, res) => {//completed
+router.post("/sendotp", upload.single("image"), registerAuth, otpValidationRules, async (req, res) => {//completed
     try {
         const observer = {
             status: true,
@@ -156,7 +165,7 @@ router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, 
                 status: false,
                 code: 400,
                 data: {},
-
+                msg:"",
                 errors: {
                     general:translatedErrors
                 },
@@ -175,7 +184,7 @@ router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, 
                 }
 
             })
-        }
+        } 
         const isValid2 = phoneNumber.isValidNumber(countryCode[0].countryCode + phone);
         if (!isValid2) {
             observer.status = false;
@@ -189,13 +198,13 @@ router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, 
             observer.status = false
             observer.errors.email = req.t("error.emailExists")
         }
-        //============ check type  in users  ============
-        if (!(type == "admin" || type == "user" || type == "bus")) {
+        //============ check  type  in users  ============
+        if (!(type == "user" )) {
             observer.status = false;
             observer.errors.type = req.t("validation.typeNotExists");
         }
         //============ check gender  ============
-        if (!(gender == 1 || type == 0)) {
+        if (!(gender == 1 || gender == 0)) {
             observer.status = false;
             observer.errors.gender = req.t("validation.genderNotExists");
         }
@@ -262,25 +271,29 @@ router.post("/sendotp", upload.single("image"), otpValidationRules, async (req, 
         // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
 
         if (true) {
-            redisClient.setEx(phone, 600, generatedOTP, (err) => {
-                if (err) {
-                    return res.status(500).json({
-                        status: false,
-                        code: 500,
-                        msg: "Internal server error sending otp",
-                        data: {},
-                        errors: { serverError: err },
-                    });
-                }
-            });
-
-            return res.status(200).json({
+            // redisClient.setEx(phone, 600, generatedOTP, (err) => {
+            //     if (err) {
+            //         return res.status(500).json({
+            //             status: false,
+            //             code: 500,
+            //             msg: "Internal server error sending otp",
+            //             data: {},
+            //             errors: { serverError: err },
+            //         });
+            //     }
+            // });
+            await insertvalue(phone, generatedOTP);
+            res.status(200).json({
                 status: true,
                 code: 200,
                 msg: req.t("sendOtp") + "  :" + generatedOTP,
                 data: {},
                 errors: {},
             });
+            setTimeout(async () => {
+                await deletevalue(phone);
+            }, 10 * 60000);
+            return;
         }
     } catch (err) {
         console.log(err);
@@ -331,7 +344,7 @@ const registrationValidationRules = [
 
 
 
-router.post("/register", upload.single("image"), registrationValidationRules, async (req, res) => {// completed
+router.post("/register", upload.single("image"), registerAuth, registrationValidationRules, async (req, res) => {// completed
     try {
         const { deviceToken } = req.body;
         //============  Check if there are any validation errors ============
@@ -405,7 +418,6 @@ router.post("/register", upload.single("image"), registrationValidationRules, as
         }
 
 
-
         //============ check email existes in users  ============
         const emailexists = await query("select * from users where email = ?", email);
         if (emailexists[0]) {
@@ -418,13 +430,13 @@ router.post("/register", upload.single("image"), registrationValidationRules, as
             observer.status = false
             observer.errors.nationality = req.t("error.nationalityNotExists")
         }
-        //============ check type  in users  ============
-        if (!(type == "admin" || type == "user" || type == "bus")) {
+        //============ check type  in users  ============|| type == "bus"
+        if (!(type == "admin" || type == "user" )) {
             observer.status = false
             observer.errors.type = req.t("validation.typeNotExists")
         }
         //============ check gender  ============
-        if (!(gender == 1 || type == 0)) {
+        if (!(gender == 1 || gender == 0)) {
             observer.status = false
             observer.errors.gender = req.t("validation.genderNotExists")
         }
@@ -473,19 +485,37 @@ router.post("/register", upload.single("image"), registrationValidationRules, as
             })
         }
         //============ conferm otp   ============
-
-        const value = await redisClient.get(phone, async (err, storedOtp) => {
-            if (err) {
-                throw err
-            }
-        });
-        // value
-        if ( 999999== otp) {
-            await redisClient.del(phone, async (err) => {
-                if (err) {
-                    throw err;
-                }
+        
+        const pair = await checkExists(phone)
+        if (!pair.status) {
+            fs.unlinkSync("./upload/" + req.file.filename); //delete image
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.invalidOtp"),
+                data: {},
+                errors: {},
             });
+        }
+        const value = pair.value1
+        // await redisClient.get(phone, async (err, storedOtp) => {
+        //     if (err) {
+        //         throw err
+        //     }
+        // });
+        if (req.type == "admin") {
+            value = otp;
+        }
+        // value
+        if (999999 == otp) {
+            if (!(req.type == "admin")) {
+            //     await redisClient.del(phone, async (err) => {
+            //     if (err) {
+            //         throw err;
+            //     }
+            // });
+            }
+            await deletevalue(phone);
 
             const userData = {
                 userName: userName,
@@ -566,7 +596,6 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
                 status: false,
                 code: 400,
                 data: {},
-
                 errors: {
                     general: translatedErrors 
                 },
@@ -580,7 +609,9 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
         const checkedPassword = await bcrypt.compare(password, user1.password);
         if (checkedPassword) {
             //============ Return success response without (password && status) ============
-            delete user1.password;
+            if (user1.type=="bus"|| user1.type=="user") {
+            delete user1.password;        
+            }
             // delete user1.deviceToken;
             const host = req.get('host');
             user1.profile_image = `http://${host}/upload/${user1.profile_image} `
@@ -659,18 +690,23 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
             }
             // sendOTP(`الرقم سري هو ${generatedOTP}`, user.phone)
             if (true) {
-                await redisClient.setEx(user[0].phone, 600, generatedOTP, (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
-                return res.status(200).json({
+                // await redisClient.setEx(user[0].phone, 600, generatedOTP, (err) => {
+                //     if (err) {
+                //         throw err;
+                //     }
+                // });
+                await insertvalue(user[0].phone, generatedOTP);
+                res.status(200).json({
                     status: true,
                     code: 200,
-                    msg: req.t("sendOtp"),
+                    msg: req.t("sendOtp") + "  :" + generatedOTP,
                     data: {},
                     errors: {},
                 });
+                setTimeout(async () => {
+                    await deletevalue(user[0].phone);
+                }, 10 * 60000);
+                return;
             }
         }
         return res.status(404).json({
@@ -732,19 +768,23 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
             const value = await checkExists(user[0].phone)
 // value.value1 
             if (999999== otp) {
-                await redisClient.setEx(user[0].phone, 600, "1", (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
-
-                return res.status(200).json({
+                // await redisClient.setEx(user[0].phone, 600, "1", (err) => {
+                //     if (err) {
+                //         throw err;
+                //     }
+                // });
+                await insertvalue(user[0].phone, "1");
+                res.status(200).json({
                     status: true,
                     code: 200,
                     msg: "",
                     data: {},
                     errors: {},
                 });
+                setTimeout(async () => {
+                    await deletevalue(user[0].phone);
+                }, 10 * 60000);
+                return;
             } else {
                 return res.status(400).json({
                     status: false,
@@ -807,11 +847,12 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
             const value = await checkExists(user[0].phone)
 
             if (value.value1) {
-                await redisClient.del(user[0].phone, async (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                // await redisClient.del(user[0].phone, async (err) => {
+                //     if (err) {
+                //         throw err;
+                //     }
+                // });
+                await deletevalue(user[0].phone);
                 await query("update users set password=? where id =? ", [
                     await bcrypt.hash(newPass, 10),
                     user[0].id,
@@ -890,7 +931,6 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
             if (imageExists) {
                 fs.unlinkSync("./upload/" + req.file.filename);//delete image
             }
-            const errorlink = errors.array()
             const translatedErrors = errors.array().map(error => ({
                 ...error,
                 msg: req.t(error.msg)
@@ -899,7 +939,6 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
                 status: false,
                 code: 400,
                 data: {},
-
                 errors: {
                     general: translatedErrors 
                 },
@@ -926,12 +965,13 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
             observer.status = false
             observer.errors.phone.push(req.t("validation.phoneNotExists"))
         }
-        if (!(type == "admin" || type == "user" || type == "bus")) {
+        // || type == "bus"
+        if (!(type == "admin" || type == "user" )) {
             observer.status = false;
             observer.errors.type = req.t("validation.typeNotExists");
         }
         //============ check gender  ============
-        if (!(gender == 1 || type == 0)) {
+        if (!(gender == 1 || gender == 0)) {
             observer.status = false;
             observer.errors.gender = req.t("validation.genderNotExists");
         }
@@ -1044,24 +1084,30 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
             }
             const generatedOTP = await generateOTP();
             if (true) {
-                redisClient.setEx(phone, 600, generatedOTP, (err) => {
-                    if (err) {
-                        throw err
-                    }
-                });
+                // redisClient.setEx(phone, 600, generatedOTP, (err) => {
+                //     if (err) {
+                //         throw err
+                //     }
+                // });
+                await insertvalue(phone, generatedOTP);
+                console.log(await query("select * from otpstoring where masterkey=?",phone));
                 if (imageExists) {
                     fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
                 }
                 //******************** */ sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
 
                 await query("update users set ? where id=?", [userData, autherized.id]);
-                return res.status(200).json({
+                res.status(200).json({
                     status: true,
                     code: 200,
                     msg: req.t("profileEdited") + " ,  " + req.t("sendOtp") + "  :" + generatedOTP,
                     data: {},
                     errors: {}
                 })
+                setTimeout(async() => {
+                    await deletevalue(phone);
+                }, 10 * 60000);
+                return;
 
             }
         }
@@ -1091,22 +1137,28 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
             // sendOTPemail(`الرقم سري هو ${generatedOTP}`, email)
             const generatedOTP = await generateOTP();
             if (true) {
-                redisClient.setEx(email, 600, generatedOTP, (err) => {
-                    if (err) {
-                        throw err
-                    }
-                });
+                // redisClient.setEx(email, 600, generatedOTP, (err) => {
+                //     if (err) {
+                //         throw err
+                //     }
+                // });
+                await insertvalue(email, generatedOTP);
                 if (imageExists) {
                     fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
                 }
                 await query("update users set ? where id=?", [userData, autherized.id]);
-                return res.status(200).json({
+                res.status(200).json({
                     status: true,
                     code: 200,
                     msg: req.t("profileEdited") + " , " + req.t("sendOtp") + "  :" + generatedOTP,
                     data: {},
                     errors: {}
                 })
+                setTimeout(async() => {
+                    await deletevalue(email);
+                }, 10 * 60000);
+                return;
+
             }
         }
         if (imageExists) {
@@ -1162,7 +1214,6 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
         //============  Check if there are any validation errors ============ 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
             const translatedErrors = errors.array().map(error => ({
                 ...error,
                 msg: req.t(error.msg)
@@ -1249,12 +1300,8 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
         }
         //============ conferm otp   ============
         if (statusex == 0) {
-            const value = await redisClient.get(phone, async (err, storedOtp) => {
-                if (err) {
-                    throw err
-                }
-            });
-            if (!value) {
+            const value = (await checkExists(phone))
+            if (!value.status) {
                 return res.status(400).json({
                     status: false,
                     code: 400,
@@ -1264,13 +1311,14 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
                 })
             }
-// value
+            // value.value1
             if (999999 == otp) {
-                await redisClient.del(phone, async (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                // await redisClient.del(phone, async (err) => {
+                //     if (err) {
+                //         throw err;
+                //     }
+                // });
+                await deletevalue(phone);
                 const userData = {
                     phone: phone,
                     nationalityID: nationalityID
@@ -1301,13 +1349,9 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
         }
         if (statusex == 1) {
-            const value = await redisClient.get(email.toString(), async (err, storedOtp) => {
-                if (err) {
-                    throw err
-                }
-            });
-            // console.log(value);
-            if (!value) {
+            const value = (await checkExists(email.toString()))
+            console.log(value);
+            if (!value.status) {
                 return res.status(400).json({
                     status: false,
                     code: 400,
@@ -1317,13 +1361,15 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
                 })
             }
-//   value          
+
+//   value.value1         
             if ( 999999== otp) {
-                await redisClient.del(email.toString(), async (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                // await redisClient.del(email.toString(), async (err) => {
+                //     if (err) {
+                //         throw err;
+                //     }
+                // });
+                await deletevalue(email.toString());
                 const userData = {
                     email: email
                 }

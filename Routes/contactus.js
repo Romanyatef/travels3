@@ -8,24 +8,31 @@ const adminAuth = require("../middleware/admin");
 const phoneNumber = require('libphonenumber-js');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
 
+
+
 const paginatedResults = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
-    const query2 = `select * from ${tableName} limit ? offset ?`;
-    const result = await query(query2, [limit, startIndex]);
-    const userData = {
+    const query2 = `select * from ${tableName}  limit ? offset ?`;
+    const result = await query(query2, [ (limit + 1), startIndex]);
+    const complaints = {
         result: result,
         statusPrevious: true,
         statusNext: true
     }
+    if (!(result.length == limit + 1)) {
+        complaints.statusNext = false
+    }
+    if (result.length == limit + 1) {
+        await complaints.result.pop();
+    }
+
     if (startIndex == 0) {
-        userData.statusPrevious = false
-    }
-    if (result.length < limit) {
-        userData.statusNext = false
+        complaints.statusPrevious = false
     }
 
 
-    return userData;
+
+    return complaints;
 };
 
 const otpValidationRules = [
@@ -117,7 +124,6 @@ router6.get("/solve", adminAuth, async (req, res) => {
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const complaints = await paginatedResults("contactus", pageNumber, limitNumber)
-        console.log(complaints);
         if (complaints.result[0]) {
 
             await Promise.all(complaints.result.map(alter));

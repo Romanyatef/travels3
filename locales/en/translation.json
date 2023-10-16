@@ -8,10 +8,22 @@
   "addVisa": "Visa added successfully",
   "sendOtp": "otp sent last for 10 minutes",
   "profileEdited": "we edited your profile successfully",
+  "userActivate": " user activated successfuly",
+  "yes": "yes",
+  "no": "no",
+  "male": "male",
+  "female": "female",
+  "inactive": "inactive",
+  "active": "active",
+  "userInactivate": " user inactivated successfuly",
   "sendOtpAgain": "we send it again",
 
-
   "error": {
+    "NotripsforyouButThatSuggestions": "no trips but take those suggestions",
+    "tripIDNOTExists": "no maintenance history for that vehicle",
+    "Notrips": "no trips will go to your destination",
+    "userActivated": " user already activated",
+    "userInactivated": " user already inactivated",
     "enterTerms": "please enter the terms and conditions",
     "noTermsv": "there is no terms and conditions ",
     "noTerms": "there is no terms and conditions to delete",
@@ -52,17 +64,41 @@
     "noNationality": "nationality not exists",
     "invalidOperation": "Invalid operation",
     "noData": "there is no user data for any other user",
+    "goBack":"please enter the trip status that is going or arrive",
+    "noTripData": "there are no trips at the current time",
+    "tripIDNOTExistsID": "please select a trip to see details",
+    "tripStationsNOTExists": "no stations to that trip",
+    "noUser": "user not found",
+    "noDriver": "driver not found",
     "noUserData": "there is no user data",
     "typeNotvalid": "type is must be user or admin or bus",
     "userIDNOTExistsID": "please select an user to see profile",
+    "NOINActiveUsers": "No users have an in-active state !",
     "hourdifference": "please enter hours that the time difference is 6 hours",
+    "emiratesIDExists": "this National ID is already exists",
     "limitPage": "please enter page number and limit for data required",
     "notAgreeOnTerms": "please agree on terms and conditions and make sure to read them before you agree",
     "invalidAuth": "you are not authorized to access this route !"
   },
-
+  "imagesValidation": {
+    "imagesRequired": "Required photos are missing:",
+    "profile_image": "profile image",
+    "carLicense": "car license",
+    "tradeLicense": "trade license",
+    "residenceVisa": "residence visa",
+    "drivingLicense": "driving license",
+    "passport": "passport"
+  },
 
   "validation": {
+
+    "modelNotExists":"vehicle model does not exist",
+    "vehicleNumNotExists":"vehicle number does  not exist",
+    "seatsNotExists":"vehicle number of seats does  not exist",
+    "vehiclecolorENNotExists":"vehicle color in English does not exist",
+    "vehiclecolorARNotExists":"vehicle color in Arabic does not exist",
+
+    "AddressNotExists": "please enter the two addresses",
     "enterLink": "please enter a valid link",
     "namelong": " name must be at least 4 characters long and 10 in maximum and to be quadrilateral name ",
     "namelong2": "user name must be at least 14 characters long and 30 in maximum and to be quadrilateral name ",
@@ -84,6 +120,11 @@
     "dayStartNotExists": "please enter the start day of work",
     "dayEndNotExists": "please enter the end day of work",
 
+    "startTime": "please enter the start hour of the trip",
+    "endTime": "please enter the end hour of the trip",
+
+    "individualOrCorporateNotExists": "Please enter if the driver is an individual or belongs to a company",
+    "companyName": "please enter company name",
     "subjectNotExists": "subject is required",
     "countryCodeNotExists": "country Code is required",
     "homeAddressNotExists": "home address is required",

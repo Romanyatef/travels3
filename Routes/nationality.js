@@ -61,7 +61,6 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
             observer.errors.nationalityAR = req.t("error.nationalityARNOTExists");
 
         }
-        console.log(observer.status);
         if (!observer.status) {
             return res.status(400).json({
                 status: false,
@@ -250,13 +249,17 @@ router3.get("/view", async (req, res) => {//completed
 
         const termsexists = await query("select * from nationalities");
         if (termsexists[0]) {
-            return res.status(200).json({
+            res.status(200).json({
                 status: true,
                 code: 200,
                 msg: "",
                 data: termsexists,
                 errors: {}
             })
+            setTimeout(() => {
+                console.log("hrwe");
+            }, 10);
+            return;
         }
         return res.status(200).json({
             status: true,
