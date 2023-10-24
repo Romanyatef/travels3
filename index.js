@@ -72,7 +72,7 @@ app.get("/healthz", (req, res) => {
     res.status(200).send("good");
 })
 
-app.listen(process.env.PORT || 4000, process.env.HOST, () => {
+app.listen(process.env.PORT || 80, process.env.HOST, () => {
     console.log("the web server is running on port :" + process.env.PORT);
 })
 
@@ -110,22 +110,22 @@ app.use("/trip", travelsOperations.router8);
 
 //====================================================================
 // send notification by arrival time
-const cronExpression2 = `*/5 * * * *`; // Runs every 5 minutes
-cron.schedule(cronExpression2, async () => {//incomplete//send notification with firebase
-    const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
+// const cronExpression2 = `*/5 * * * *`; // Runs every 5 minutes
+// cron.schedule(cronExpression2, async () => {//incomplete//send notification with firebase
+//     const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
 
-    const trips = await query("select * from trips where status=1")
-    if (trips[0]) {
-        await Promise.all(trips.map(async trip => {
-            const stations = await query("select stations where tripID=? AND MINUTE(timeArriveBack) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE)) OR MINUTE(timeArriveGo) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE))", [trip.id, currentTime, currentTime])
+//     const trips = await query("select * from trips where status=1")
+//     if (trips[0]) {
+//         await Promise.all(trips.map(async trip => {
+//             const stations = await query("select stations where tripID=? AND MINUTE(timeArriveBack) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE)) OR MINUTE(timeArriveGo) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE))", [trip.id, currentTime, currentTime])
             
-        }))
-    }
+//         }))
+//     }
 
     // const stations = await query("select * from stations");
 
 
-});
+// });
 //*********************************************************************
 
 // cron.schedule(`* * * * *`, async () => {//completed404//update trip status 
