@@ -14,7 +14,8 @@ const phoneNumber = require('libphonenumber-js')
 const redis = require('redis');
 const axios = require('axios');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-const registerAuth=require("../middleware/registerAuth.js")
+const registerAuth = require("../middleware/registerAuth.js")
+const isFloat = (require("./travelsOperations.js")).isFloat
 require('dotenv').config();
 
 
@@ -103,6 +104,40 @@ async function insertvalue(masterkey, value) {
 async function deletevalue(masterkey) {
     await query("delete from otpstoring where masterkey=?", masterkey);
 }
+// const validateHomeAddress = (value, { req }) => {
+//     const { homeAddressLat, homeAddressLong } = req.body;
+
+//     if (!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) {
+//         throw new Error('validation.homeAddressNotExists');
+//     }
+
+//     const lat = parseFloat(homeAddressLat);
+//     const long = parseFloat(homeAddressLong);
+
+//     if (lat < -85.05112878 || lat > 85.05112878 || long < -180.0 || long > 180.0) {
+//         throw new Error('validation.homeAddressNotExists');
+//     }
+
+//     return true;
+// };
+const validateHomeAddress = (value, { req }) => {
+    const { homeAddressLat, homeAddressLong } = req.body;
+
+    if ((!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) || (parseFloat(homeAddressLat) < -85.05112878 || parseFloat(homeAddressLat) > 85.05112878 || parseFloat(homeAddressLong) < -180.0 || parseFloat(homeAddressLong) > 180.0)) {
+        
+        throw new Error('validation.workAddressNotExists');
+    }
+    return true;
+};
+const validateWorkAddress = (value, { req }) => {
+    const { workAddressLat, workAddressLong } = req.body;
+
+    if ((!isFloat(workAddressLat) || !isFloat(workAddressLong)) || (parseFloat(workAddressLat) < -85.05112878 || parseFloat(workAddressLat) > 85.05112878 || parseFloat(workAddressLong) < -180.0 || parseFloat(workAddressLong) > 180.0)) {
+        
+        throw new Error('validation.workAddressNotExists');
+    }
+    return true;
+};
 const otpValidationRules = [
     body('userName').custom((value, { req }) => {
         if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
@@ -110,9 +145,13 @@ const otpValidationRules = [
         }
         return true;
     }),
+
+    body('homeAddressLat').custom(validateHomeAddress),
+    body('homeAddressLong').custom(validateHomeAddress),
+    body('workAddressLat').custom(validateWorkAddress),
+    body('workAddressLong').custom(validateWorkAddress),
+
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
-    body('workAddress').isString().withMessage('validation.workAddressNotExists'),
-    body('homeAddress').isString().withMessage('validation.homeAddressNotExists'),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
     body('email').isEmail().withMessage('validation.emailNotExists'),
     body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
@@ -320,9 +359,11 @@ const registrationValidationRules = [
             }
             return true;
         }),
+    body('homeAddressLat').custom(validateHomeAddress),
+    body('homeAddressLong').custom(validateHomeAddress),
+    body('workAddressLat').custom(validateWorkAddress),
+    body('workAddressLong').custom(validateWorkAddress),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
-    body('workAddress').isString().withMessage('validation.workAddressNotExists'),
-    body('homeAddress').isString().withMessage('validation.homeAddressNotExists'),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
     body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
     body('email').isEmail().withMessage('validation.emailNotExists'),
@@ -346,7 +387,6 @@ const registrationValidationRules = [
 
 router.post("/register", upload.single("image"), registerAuth, registrationValidationRules, async (req, res) => {// completed
     try {
-        const { deviceToken } = req.body;
         //============  Check if there are any validation errors ============
         if (!req.file) {
             return res.status(400).json({
@@ -376,20 +416,10 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
                 },
             });
         }
-        if (!deviceToken) {
-            fs.unlinkSync("./upload/" + req.file.filename);//delete image
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.deviceTokenNotExists"),
-                data: {},
-                errors: {}
 
-            })
-        }
 
         //============ Extract data from the request body ============
-        const { otp, email, password, phone, type, userName, nationalityID, homeAddress, workAddress, birthDate, gender, specialNeeds, conditions } = req.body;
+        const { otp, email, password, phone, type, userName, nationalityID, homeAddressLat, homeAddressLong, workAddressLong, workAddressLat, birthDate, gender, specialNeeds, conditions } = req.body;
         const observer = {
             status: true,
             errors: {}
@@ -526,13 +556,14 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
                 phone: phone,
                 profile_image: req.file.filename,
                 nationalityID: nationalityID,
-                homeAddress: homeAddress,
-                workAddress: workAddress,
+                workAddressLong: workAddressLong,
+                workAddressLat: workAddressLat,
+                homeAddressLong: homeAddressLong,
+                homeAddressLat: homeAddressLat,
                 birthDate: birthDate,
                 gender: gender,
                 specialNeeds: specialNeeds || 0,
                 countryCode: countryCode[0].countryCode,
-                deviceToken: deviceToken
             }
 
             await query("insert into users set ?", userData);
@@ -612,7 +643,6 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
             if (user1.type=="bus"|| user1.type=="user") {
             delete user1.password;        
             }
-            // delete user1.deviceToken;
             const host = req.get('host');
             user1.profile_image = `http://${host}/upload/${user1.profile_image} `
             // res.status(200).json(user[0])

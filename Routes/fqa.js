@@ -170,6 +170,9 @@ router3.get("/view", async (req, res) => {//completed
 
 
 
+
+
+
 //==========================================  add promo ==========================================//
 
 router3.post("/addpromo", adminAuth, async (req, res) => {//completed

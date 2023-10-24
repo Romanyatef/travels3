@@ -38,7 +38,6 @@ const userAuthlog = async (req, res, next) => {
     //         next();
         
     // }
-
     await query("update users set deviceToken=? where id=?", [req.body.devicetoken, user[0].id]);
     delete user[0].devicetoken
         res.locals.user = user[0];

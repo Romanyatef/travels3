@@ -17,14 +17,19 @@ const generalValidationRules = [
     body('phone').isString().withMessage("validation.phoneNotExists"),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('lLink').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.lLinkNotExists');
+        }
         const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\//i;
         if (!linkedinRegex.test(value)) {
             throw new Error('validation.lLinkNotExists');
         }
         return true;
     }),
-
     body('adressLink').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.adressNotExists');
+        }
         let googleRegex = /^https:\/\/www\.google\.com\/maps\/place\/(.*)$/
         if (!googleRegex.test(value)) {
             throw new Error('validation.adressNotExists');
@@ -32,62 +37,71 @@ const generalValidationRules = [
         return true;
     }),
     body('wLink').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.wLinkNotExists');
+        }
         const whatsappRegex = /^https?:\/\/(www\.)?.+\.whatsapp\.com\//i;
         if (!whatsappRegex.test(value)) {
             throw new Error('validation.wLinkNotExists');
         }
         return true;
     }),
-
     body('fLink').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.fLinkNotExists');
+        }
         const facebookRegex = /^https?:\/\/(www\.)?facebook\.com\//i;
         if (!facebookRegex.test(value)) {
             throw new Error('validation.fLinkNotExists');
         }
         return true;
     }),
-
     body('tLink').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.tLinkNotExists');
+        }
         const twitterRegex = /^https?:\/\/(www\.)?twitter\.com\//i;
         if (!twitterRegex.test(value)) {
             throw new Error('validation.tLinkNotExists');
         }
         return true;
     }),   
-    body('dayStart')
-        .custom((value, { req }) => {
+    body('dayStart').custom((value, { req }) => {
             if (isNaN(parseInt(value)) || (!(value.length == 1))) {
 
                 throw new Error("validation.dayStartNotExists");
             }
             return true;
         }),
-    body('dayEnd')
-        .custom((value, { req }) => {
+    body('dayEnd').custom((value, { req }) => {
             if (isNaN(parseInt(value)) || (!(value.length == 1))) {
 
                 throw new Error("validation.dayEndNotExists");
             }
             return true;
         }),
-    body('hourStart')
-        .custom((value) => {
+    body('hourStart').custom((value) => {
             // "HH:mm:ss"
+            if (!value || typeof value !== 'string') {
+                throw new Error('validation.hourStartNotExists');
+            }
             const hours = parseInt(value.substring(0, 2))
             const minutes = parseInt(value.substring(2, 4))
             const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
-            if (!timeRegex.test(value) || hours >= 24 || minutes > 60) {
+            if (!timeRegex.test(value) || hours >= 24 || minutes >= 60) {
                 throw new Error('validation.hourStartNotExists');
             }
             return true;
         }),
-    body('hourEnd')
-        .custom((value, { req }) => {
+    body('hourEnd').custom((value, { req }) => {
             // "HH:mm:ss"
+            if (!value || typeof value !== 'string') {
+                throw new Error('validation.hourEndNotExists');
+            }
                 const hours = parseInt(value.substring(0, 2))
                 const minutes = parseInt(value.substring(2, 4))
                 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
-                if (!timeRegex.test(value) || hours > 24 || minutes > 60) {
+                if (!timeRegex.test(value) || hours >= 24 || minutes >= 60) {
                     throw new Error('validation.hourEndNotExists');
                 }
                 return true;

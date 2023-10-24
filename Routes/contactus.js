@@ -112,7 +112,7 @@ const alter = async (e) => {
 router6.get("/solve", adminAuth, async (req, res) => {
     try {
         const { page, limit } = req.query;
-        if (!(limit || page)) {
+        if (!(Boolean(limit) && Boolean(page))) {
             return res.status(400).json({
                 status: false,
                 code: 400,
