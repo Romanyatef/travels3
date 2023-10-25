@@ -30,7 +30,6 @@
     "node-cron": "^3.0.2",
     "nodemon": "^3.0.1",
     "read-excel-file": "^5.7.1",
-    "redis": "^4.6.8",
     "util": "^0.12.5",
     "uuid": "^9.0.1"
   }
