@@ -9,6 +9,7 @@ const upload = require("../middleware/uploadImages");
 const userAuth = require("../middleware/user.js");
 const userAuthlog = require("../middleware/lodingAuth.js");
 const autherized = require("../middleware/autherized.js");
+const Notautherized = require("../middleware/Notautherized.js");
 const fs = require("fs");
 const phoneNumber = require('libphonenumber-js')
 const redis = require('redis');
@@ -20,7 +21,6 @@ require('dotenv').config();
 
 
 
-//==========================================  send otp for registration ==========================================//
 const { Vonage } = require('@vonage/server-sdk');
 const { isString } = require('util');
 
@@ -142,60 +142,19 @@ const validateWorkAddress = (value, { req }) => {
     }
     return true;
 };
+//==========================================  send otp for registration ==========================================//
+
 const otpValidationRules = [
-    body('userName').custom((value, { req }) => {
-        if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
-            throw new Error("validation.namelong2");
-        }
-        return true;
-    }),
+    body('otp')
+        .custom((value, { req }) => {
+            if (isNaN(parseInt(value)) || value.length !== 6) {
+                throw new Error("validation.otpNotExists");
+            }
+            return true;
+        }),];
 
-    body('homeAddressLat').custom(validateHomeAddress),
-    body('homeAddressLong').custom(validateHomeAddress),
-    body('workAddressLat').custom(validateWorkAddress),
-    body('workAddressLong').custom(validateWorkAddress),
-
-    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
-    body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
-    body('email').isEmail().withMessage('validation.emailNotExists'),
-    body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
-    body('phone').isNumeric().withMessage('validation.phoneNotExists'),
-];
-
-router.post("/sendotp", upload.single("image"), registerAuth, otpValidationRules, async (req, res) => {//completed
+router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) => {//completed
     try {
-        const observer = {
-            status: true,
-            errors: {},
-        };
-
-        observer.errors.phone = [];
-
-        const {
-            email,
-            password,
-            phone,
-            type,
-            userName,
-            nationalityID,
-            homeAddress,
-            workAddress,
-            birthDate,
-            gender,
-            specialNeeds,
-            conditions,
-        } = req.body;
-
-        if (!req.file) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.imageNotExists"),
-                data: {},
-                errors: {}
-            })
-        }
-        //============  Check if there are any validation errors ============
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const errorlink = errors.array()
@@ -203,141 +162,59 @@ router.post("/sendotp", upload.single("image"), registerAuth, otpValidationRules
                 ...error,
                 msg: req.t(error.msg)
             }));
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image
             return res.status(400).json({
                 status: false,
                 code: 400,
                 data: {},
-                msg:"",
+
                 errors: {
-                    general:translatedErrors
+                    general: translatedErrors
                 },
             });
         }
 
-        const countryCode = await query("select countryCode from nationalities where id=?", nationalityID)
-        if (!countryCode[0]) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: "",
-                data: {},
-                errors: {
-                    nationality: req.t("error.noNationality")
-                }
-
-            })
-        } 
-        const isValid2 = phoneNumber.isValidNumber(countryCode[0].countryCode + phone);
-        if (!isValid2) {
-            observer.status = false;
-            observer.errors.phone.push(req.t("validation.phoneNotExists"));
-        }
-
-
-        //============ check email existes in users  ============
-        const emailexists = await query("select * from users where email = ?", email);
-        if (emailexists[0]) {
-            observer.status = false
-            observer.errors.email = req.t("error.emailExists")
-        }
-        //============ check  type  in users  ============
-        if (!(type == "user" )) {
-            observer.status = false;
-            observer.errors.type = req.t("validation.typeNotExists");
-        }
-        //============ check gender  ============
-        if (!(gender == 1 || gender == 0)) {
-            observer.status = false;
-            observer.errors.gender = req.t("validation.genderNotExists");
-        }
-        //============ check nationality existes in nationalities  ============
-        const nationalityExists = await query("select * from nationalities where id = ?", nationalityID);
-        if (!nationalityExists[0]) {
-            observer.status = false
-            observer.errors.nationality = req.t("error.nationalityNotExists")
-        }
-        //============ check terms and conditions  ============
-        if (!(conditions == 1)) {
-            observer.status = false;
-            observer.errors.termsAndConditions = req.t("error.notAgreeOnTerms");
-        }
-
-        //============ check phone existes in users  ============
-        const phoneExists = await query("select * from users where phone = ?", phone);
-
-        if (phoneExists[0]) {
-            observer.status = false;
-            observer.errors.phone.push(req.t("error.phoneExists"))
-
-        } else {
-            const phoneExists2 = await query(
-                "select * from users where phone = ?",
-                phone.toString().slice(2)
-            );
-
-            if (phoneExists2[0]) {
-                observer.status = false
-                observer.errors.phone.push(req.t("error.phoneExists"))
-            }
-        }
-
-        //============ check all errors   ============
-        if (!observer.status) {
-            if (observer.errors.phone.length == 0) {
-                delete observer.errors.phone
-            }
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                data: {},
-                errors: {
-                    ...observer.errors,
-                },
-            });
-        }
-        fs.unlinkSync("./upload/" + req.file.filename); //delete image
-        const generatedOTP = await generateOTP();
-
-        // crypto.randomBytes(16).toString("hex")
-        const values = await checkExists(req.body.phone);
+        const Notautherized = res.locals.Notautherized;
+        const { otp } = req.body
+        const values = await checkExists(Notautherized.phone);
         if (values.status) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.otpWait"),
-                data: {},
-                errors: {},
-            });
-        }
-        // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
 
-        if (true) {
-            // redisClient.setEx(phone, 600, generatedOTP, (err) => {
-            //     if (err) {
-            //         return res.status(500).json({
-            //             status: false,
-            //             code: 500,
-            //             msg: "Internal server error sending otp",
-            //             data: {},
-            //             errors: { serverError: err },
-            //         });
-            //     }
-            // });
-            await insertvalue(phone, generatedOTP);
-            res.status(200).json({
+            // if(values.value1==otp){}
+            if (Notautherized.type == "admin") {
+                values.value1 = otp;
+            }
+            // value
+            // if (!(req.type == "admin")) {
+            //     //     await redisClient.del(phone, async (err) => {
+            //     //     if (err) {
+            //     //         throw err;
+            //     //     }
+            //     // });
+            // }
+            if (999999 == otp) {
+                await query("update users set status=1 where id=?", Notautherized.id)
+            }
+            await deletevalue(Notautherized.phone);
+            return res.status(200).json({
                 status: true,
                 code: 200,
-                msg: req.t("sendOtp") + "  :" + generatedOTP,
+                msg: req.t("register"),
                 data: {},
                 errors: {},
             });
-            setTimeout(async () => {
-                await deletevalue(phone);
-            }, 10 * 60000);
-            return;
         }
+
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.invalidOtp"),
+                data: {},
+                errors: {},
+            });
+
+        
+        // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
+
+
     } catch (err) {
         console.log(err);
         return res.status(500).json({
@@ -373,13 +250,6 @@ const registrationValidationRules = [
     body('email').isEmail().withMessage('validation.emailNotExists'),
     body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
     body('phone').isNumeric().withMessage('validation.phoneNotExists'),
-    body('otp')
-        .custom((value, { req }) => {
-            if (isNaN(parseInt(value)) || value.length !== 6) {
-                throw new Error("validation.otpNotExists");
-            }
-            return true;
-        }),
     body('type').notEmpty().withMessage('validation.typeNotExists'),
 ];
 // async function encryptNumber(number,key) {
@@ -518,44 +388,53 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
 
             })
         }
-        //============ conferm otp   ============
         
         const pair = await checkExists(phone)
-        if (!pair.status) {
+        if (pair.status) {
             fs.unlinkSync("./upload/" + req.file.filename); //delete image
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.invalidOtp"),
+                msg: req.t("error.otpWait"),
                 data: {},
                 errors: {},
             });
         }
-        const value = pair.value1
+        // invalidOtp
         // await redisClient.get(phone, async (err, storedOtp) => {
         //     if (err) {
         //         throw err
         //     }
         // });
-        if (req.type == "admin") {
-            value = otp;
-        }
-        // value
-        if (999999 == otp) {
-            if (!(req.type == "admin")) {
-            //     await redisClient.del(phone, async (err) => {
+
+            // await deletevalue(phone);
+        
+            // ============ Return success response without password ============
+        const generatedOTP = await generateOTP();
+        // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
+
+        if (true) {
+
+            // redisClient.setEx(phone, 600, generatedOTP, (err) => {
             //     if (err) {
-            //         throw err;
+            //         return res.status(500).json({
+            //             status: false,
+            //             code: 500,
+            //             msg: "Internal server error sending otp",
+            //             data: {},
+            //             errors: { serverError: err },
+            //         });
             //     }
             // });
-            }
-            await deletevalue(phone);
 
+            await insertvalue(phone, generatedOTP);
+            
+            const token = crypto.randomBytes(16).toString("hex") //to now is an admin or not and is loged or not 
             const userData = {
                 userName: userName,
                 email: email,
                 password: await bcrypt.hash(password, 10),
-                token: crypto.randomBytes(16).toString("hex"),//to now is an admin or not and is loged or not 
+                token: token,
                 type: type,
                 phone: phone,
                 profile_image: req.file.filename,
@@ -569,29 +448,38 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
                 specialNeeds: specialNeeds || 0,
                 countryCode: countryCode[0].countryCode,
             }
-
             await query("insert into users set ?", userData);
-            // ============ Return success response without password ============
-
-            return res.status(200).json({
+            res.status(200).json({
                 status: true,
                 code: 200,
-                msg: req.t("register"),
-                data: {},
-                errors: {}
-
-            })
-        } else {
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image
-
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.invalidOtp"),
-                data: {},
+                msg: req.t("sendOtp") + "  :" + generatedOTP +"  , "+req.t("register"),
+                data: { token: token },
                 errors: {},
             });
+            setTimeout(async () => {
+                await deletevalue(phone);
+            }, 10 * 60000);
+            return;
         }
+            // return res.status(200).json({
+            //     status: true,
+            //     code: 200,
+            //     msg: req.t("register"),
+            //     data: {},
+            //     errors: {}
+
+            // })
+        // else {
+        //     fs.unlinkSync("./upload/" + req.file.filename); //delete image
+
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.invalidOtp"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
 
 
     } catch (err) {

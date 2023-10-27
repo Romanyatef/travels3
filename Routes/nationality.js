@@ -279,7 +279,7 @@ router3.get("/view", async (req, res) => {//completed
 
         const termsexists = await query("select * from nationalities");
         if (termsexists[0]) {
-            returnres.status(200).json({
+            return res.status(200).json({
                 status: true,
                 code: 200,
                 msg: "",

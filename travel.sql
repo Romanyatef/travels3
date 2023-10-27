@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 27, 2023 at 08:33 PM
+-- Generation Time: Oct 27, 2023 at 10:35 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -217,13 +217,6 @@ CREATE TABLE `otpstoring` (
   `value` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `otpstoring`
---
-
-INSERT INTO `otpstoring` (`id`, `masterkey`, `value`) VALUES
-(31, '01223958292', '948622');
-
 -- --------------------------------------------------------
 
 --
@@ -346,7 +339,7 @@ CREATE TABLE `users` (
   `deviceToken` varchar(255) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `status` int(1) NOT NULL DEFAULT 1
+  `status` int(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -357,7 +350,8 @@ INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`
 (6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593211797-715622718.jpg', '01223958296', 'user', 23, 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
 (24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593328130-980953242.jpg', '01223958298', 'user', NULL, 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
 (25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593395318-874280431.jpg', '01223958292', 'user', NULL, 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
-(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24695, 30.06323, '1696593688323-46490645.jpg', '01280151607', 'admin', NULL, 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1);
+(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24695, 30.06323, '1696593688323-46490645.jpg', '01280151607', 'admin', NULL, 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
+(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 23.23, 23.23, 23.23, 23.32, '1698438896142-592115090.jpg', '01280151667', 'user', NULL, 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1);
 
 -- --------------------------------------------------------
 
@@ -588,7 +582,7 @@ ALTER TABLE `nationalities`
 -- AUTO_INCREMENT for table `otpstoring`
 --
 ALTER TABLE `otpstoring`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `qrcodes`
@@ -612,7 +606,7 @@ ALTER TABLE `trips`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `variety`
