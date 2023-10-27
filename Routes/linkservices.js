@@ -8,13 +8,21 @@ const CryptoJS = require('crypto-js');
 const adminAuth = require("../middleware/admin");
 const fs = require("fs");
 const phoneNumber = require('libphonenumber-js')
-
 const query = util.promisify(conn.query).bind(conn);//transform query into a promise to use [await/async]
 
 
 
+//==========================================  add general settings ==========================================//
 const generalValidationRules = [
     body('phone').isString().withMessage("validation.phoneNotExists"),
+    body('about')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.aboutNotExists");
+            }
+            return true;
+        }),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('lLink').custom((value) => {
         if (!value || typeof value !== 'string') {
@@ -108,9 +116,6 @@ const generalValidationRules = [
         }),
 ]
 
-
-//==========================================  add general settings ==========================================//
-
 router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//completed
     try {
         const errors = validationResult(req);
@@ -129,7 +134,7 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
                 },
             });
         }
-        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressLink, nationalityID } = req.body
+        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressLink, nationalityID, about } = req.body
 
         const date1 = new Date(`2000-01-01 ${hourEnd}`);
         const date2 = new Date(`2000-01-01 ${hourStart}`);
@@ -172,8 +177,8 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
             dayEnd: dayEnd,
             dayStart: dayStart,
             phone: phone,
-            adressLink: adressLink
-
+            adressLink: adressLink,
+            about: about
         }
         await query("update variety set ? where id=2", subject);
         return res.status(200).json({
@@ -195,34 +200,8 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
     }
 });
 
-// const { link } = req.body
-
-// const termsexists = await query("select * from variety where id=2");
-// if (termsexists[0]) {
-//     if (termsexists[0].link) {
-//         await query("update variety set  link = ? where id=2", link);//order by conditions
-//         return res.status(200).json({
-//             status: true,
-//             code: 200,
-//             msg: req.t("updated"),
-//             data: {},
-//             errors: {}
-//         })
-//     }
-// }
-// const subject = { link: link }
-// await query("update variety set ? where id=2", subject);
-// return res.status(200).json({
-//     status: true,
-//     code: 200,
-//     msg: req.t("added"),
-//     data: {},
-//     errors: {}
-// })
-
 
 //==========================================  delete link ==========================================//
-
 router3.delete("/delete", adminAuth, async (req, res) => {//completed
     try {
         const termsexists = await query("select * from variety where id=2");
@@ -269,55 +248,7 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
 });
 
 
-
-
-
-//==========================================  update general settings ==========================================//
-
-// router3.put("/alter", adminAuth, creditValidationRules, async (req, res) => {//completed
-//     try {
-//         const { link } = req.body
-//         const errors = validationResult(req);
-//         if (!errors.isEmpty()) {
-//             const errorlink = errors.array()
-//             const translatedErrors = errors.array().map(error => ({
-//                 ...error,
-//                 msg: req.t(error.msg)
-//             }));
-//             return res.status(400).json({
-//                 status: false,
-//                 code: 400,
-//                 data: {},
-//                 errors: {
-//                     general: { ...translatedErrors }
-//                 },
-//             });
-//         }
-//         await query("update variety set link = ?  where id=2", link);//order by conditions
-//         return res.status(200).json({
-//             status: true,
-//             code: 200,
-//             msg: req.t("updated"),
-//             data: {},
-//             errors: {}
-//         })
-//     } catch (err) {
-//         return res.status(500).json({
-//             status: false,
-//             code: 500,
-//             msg: "",
-//             data: {},
-//             errors: { serverError: err }
-//         });
-//     }
-// });
-
-
-
-
-
 //==========================================  view general settings ==========================================//
-
 router3.get("/view", async (req, res) => {//completed
     try {
 

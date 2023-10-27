@@ -13,8 +13,23 @@ const query = util.promisify(conn.query).bind(conn);//transform query into a pro
 
 
 const nationalityValidationRules = [
-    body('nationalityAR').isString().withMessage("error.nationalityARNOTExists"),
-    body('nationalityEN').isString().withMessage("error.nationalityENNOTExists"),
+    body('nationalityAR')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("error.nationalityARNOTExists");
+            }
+            return true;
+        }),
+    body('nationalityEN')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("error.nationalityENNOTExists");
+            }
+            return true;
+        }),
+
     body('countryCode').notEmpty().withMessage("validation.countryCodeNotExists")
 ]
 
@@ -36,19 +51,19 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
                 code: 400,
                 data: {},
                 errors: {
-                    general: translatedErrors 
+                    general: translatedErrors
                 },
             });
         }
 
         const observer = {
             status: true,
-            errors:{}
+            errors: {}
         }
         const termsexists = await query("select * from nationalities where countryCode=?", countryCode);
         if (termsexists[0]) {
             observer.status = false
-            observer.errors.countryCode=req.t("error.countryCodeExistsINDB")
+            observer.errors.countryCode = req.t("error.countryCodeExistsINDB")
         }
         const termsexists2 = await query("select * from nationalities where nationalityEN=?", nationalityEN);
         if (termsexists2[0]) {
@@ -67,7 +82,7 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {...observer.errors}
+                errors: { ...observer.errors }
             })
         }
 
@@ -150,8 +165,23 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
 
 //==========================================  update nationality ==========================================//
 const nationalityUpdateValidationRules = [
-    body('nationalityAR').isString().withMessage("error.nationalityARNOTExists"),
-    body('nationalityEN').isString().withMessage("error.nationalityENNOTExists"),
+    body('nationalityAR')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("error.nationalityARNOTExists");
+            }
+            return true;
+        }),
+    body('nationalityEN')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("error.nationalityENNOTExists");
+            }
+            return true;
+        }),
+
     body('countryCode').notEmpty().withMessage("validation.countryCodeNotExists"),
     body('id').isNumeric().withMessage("error.nationalityIDNOTExistsID")
 
@@ -172,7 +202,7 @@ router3.put("/alter", adminAuth, nationalityUpdateValidationRules, async (req, r
                 code: 400,
                 data: {},
                 errors: {
-                    general: translatedErrors 
+                    general: translatedErrors
                 },
             });
         }
@@ -192,12 +222,12 @@ router3.put("/alter", adminAuth, nationalityUpdateValidationRules, async (req, r
             status: true,
             errors: {}
         }
-        const termsexists = await query("select * from nationalities where countryCode=? AND id <> ? ", [countryCode,id]);
+        const termsexists = await query("select * from nationalities where countryCode=? AND id <> ? ", [countryCode, id]);
         if (termsexists[0]) {
             observer.status = false
             observer.errors.countryCode = req.t("error.countryCodeExistsINDB")
         }
-        const termsexists2 = await query("select * from nationalities where nationalityEN=? AND id <> ?", [nationalityEN,id]);
+        const termsexists2 = await query("select * from nationalities where nationalityEN=? AND id <> ?", [nationalityEN, id]);
         if (termsexists2[0]) {
             observer.status = false
             observer.errors.nationalityEN = req.t("error.nationalityENExistsINDB")
@@ -249,17 +279,13 @@ router3.get("/view", async (req, res) => {//completed
 
         const termsexists = await query("select * from nationalities");
         if (termsexists[0]) {
-            res.status(200).json({
+            returnres.status(200).json({
                 status: true,
                 code: 200,
                 msg: "",
                 data: termsexists,
                 errors: {}
-            })
-            setTimeout(() => {
-                console.log("hrwe");
-            }, 10);
-            return;
+            });
         }
         return res.status(200).json({
             status: true,

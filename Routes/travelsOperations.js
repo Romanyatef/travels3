@@ -88,27 +88,24 @@ async function readExcelFile(filePath) {
     }
 }
 
-const validateCurrentAddress = (value, { req }) => {
-    const { latitudeCurrent, longitudeCurrent } = req.body;
 
-    if ((!isFloat(latitudeCurrent) || !isFloat(longitudeCurrent)) || (parseFloat(latitudeCurrent) < -85.05112878 || parseFloat(latitudeCurrent) > 85.05112878 || parseFloat(longitudeCurrent) < -180.0 || parseFloat(longitudeCurrent) > 180.0)) {
-
-        throw new Error('validation.currentAddressNotExists');
-    }
-    return true;
-};
-const validateWorkAddress = (value, { req }) => {
-    const { latitudeDestination, longitudeDestination } = req.body;
-
-    if ((!isFloat(latitudeDestination) || !isFloat(longitudeDestination)) || (parseFloat(latitudeDestination) < -85.05112878 || parseFloat(latitudeDestination) > 85.05112878 || parseFloat(longitudeDestination) < -180.0 || parseFloat(longitudeDestination) > 180.0)) {
-
-        throw new Error('validation.currentAddressNotExists');
-    }
-    return true;
-};
 const travelvalidation = [
-    body('name').isString().withMessage('validation.nameNotExcists'),
-    body('description').isString().withMessage('validation.descriptionNotExcists'),
+    body('name')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.nameNotExcists");
+            }
+            return true;
+        }),
+    body('description')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.descriptionNotExcists");
+            }
+            return true;
+        }),
     body('vehicleIDGo').isNumeric().withMessage('validation.vehicleGoIDNotExcists'),
     body('vehicleIDBack').isNumeric().withMessage('validation.vehicleBackIDNotExcists'),
     body('driveridGo').isNumeric().withMessage('validation.driverGoIDNotExcists'),
@@ -171,7 +168,6 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
         }
         const { name, driveridGo, driveridBack, description, vehicleIDGo, vehicleIDBack, price } = req.body
         const driverExists = [await query("select * from driver where id=? ", [driveridGo]), await query("select * from driver where id=? ", [driveridBack]),];
-        // console.log(driverExists);
         if (!(Boolean(driverExists[0]) && Boolean(driverExists[1]))) {
             return res.status(400).json({
                 status: false,
@@ -315,7 +311,6 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             const isFirstIteration = index === 0;
             const isLastIteration = index === stations.length - 1;
             const [latitude, longitude] = stationArray[5].split(", ");
-            // console.log(isDate(stationArray[2]))
 
             const station = {
                 tripID: id,
@@ -328,9 +323,6 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 details: stationArray[6],
                 address: stationArray[4],
             };
-            // console.log(moment(stationArray[2]).tz('Africa/Cairo').format("HH:mm:ss"));
-            // console.log(stationArray[2]);
-            // console.log(stationArray[3]);
             if (isFirstIteration) {
                 station.startEnd = 0
                 station.ranking = 1
@@ -389,11 +381,46 @@ const paginatedResults = async (tableName, goBack, page, limit) => {
 };
 
 //========================== get trips for you ==========================//
+const validateCurrentAddress = (value, { req }) => {
+    const {  longitudeCurrent } = req.body;
 
+    if (( !isFloat(longitudeCurrent)) ||( parseFloat(longitudeCurrent) < -180.0 || parseFloat(longitudeCurrent) > 180.0)) {
+
+        throw new Error('validation.currentAddressNotExists');
+    }
+    return true;
+};
+const validateCurrentAddress2 = (value, { req }) => {
+    const { latitudeCurrent } = req.body;
+
+    if ((!isFloat(latitudeCurrent)) || (parseFloat(latitudeCurrent) < -85.05112878 || parseFloat(latitudeCurrent) > 85.05112878)) {
+
+        throw new Error('validation.currentAddressNotExists');
+    }
+    return true;
+};
+const validateWorkAddress = (value, { req }) => {
+    const { latitudeDestination, longitudeDestination } = req.body;
+
+    if ((!isFloat(longitudeDestination))||(parseFloat(longitudeDestination) < -180.0 || parseFloat(longitudeDestination) > 180.0)) {
+
+        throw new Error('validation.workAddressNotExists');
+    }
+    return true;
+};
+const validateWorkAddress2 = (value, { req }) => {
+    const { latitudeDestination } = req.body;
+
+    if ((!isFloat(latitudeDestination)) || (parseFloat(latitudeDestination) < -85.05112878 || parseFloat(latitudeDestination) > 85.05112878)) {
+
+        throw new Error('validation.workAddressNotExists');
+    }
+    return true;
+};
 const requestTripValidation = [
-    body('latitudeCurrent').custom(validateCurrentAddress),
+    body('latitudeCurrent').custom(validateCurrentAddress2),
     body('longitudeCurrent').custom(validateCurrentAddress),
-    body('latitudeDestination').custom(validateWorkAddress),
+    body('latitudeDestination').custom(validateWorkAddress2),
     body('longitudeDestination').custom(validateWorkAddress),
 ];
 
@@ -466,8 +493,19 @@ router8.get("/tripsforyou", requestTripValidation, userAuth, async (req, res) =>
         await Promise.all(
             intersectionArray.map(async trip => {
                 const tripDetails = await query('select * from trips where id = ?', trip);
-                const drivername = await query("select fullName from driver where id = ?", [tripDetails[0].driverid]);
-                tripDetails[0].driverName = drivername[0].fullName
+                const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+
+                if (drivernameGo[0]) {
+                    tripDetails[0].driveridGo = drivernameGo[0].fullName 
+                } else {
+                    tripDetails[0].drivernameGo = "none"
+                }
+                if (drivernameBack[0]) {
+                    tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                } else {
+                    tripDetails[0].vehicleIDBack = "none"
+                }
                 const allTrip = tripDetails[0];
                 allTripsDetails.push(allTrip);
             })
@@ -476,8 +514,19 @@ router8.get("/tripsforyou", requestTripValidation, userAuth, async (req, res) =>
             await Promise.all(
                 Array.from(matchingResultsdistination2).map(async trip => {
                     const tripDetails = await query('select * from trips where id = ?', trip);
-                    const drivername = await query("select fullName from driver where id = ?", [tripDetails[0].driverid]);
-                    tripDetails[0].driverName = drivername[0].fullName
+                    const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                    const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+
+                    if (drivernameGo[0]) {
+                        tripDetails[0].driveridGo = drivernameGo[0].fullName
+                    } else {
+                        tripDetails[0].drivernameGo = "none"
+                    }
+                    if (drivernameBack[0]) {
+                        tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                    } else {
+                        tripDetails[0].vehicleIDBack = "none"
+                    }
                     const allTrip = tripDetails[0];
                     allTripsDetails.push(allTrip);
                 })
@@ -574,8 +623,19 @@ router8.get("/worktrips", userAuth, async (req, res) => {//completed4
         await Promise.all(
             intersectionArray.map(async trip => {
                 const tripDetails = await query('select * from trips where id = ?', trip);
-                const drivername = await query("select fullName from driver where id = ?", [tripDetails[0].driverid]);
-                tripDetails[0].driverName = drivername[0].fullName
+                const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+                if (drivernameGo[0]) {
+                    tripDetails[0].driveridGo = drivernameGo[0].fullName
+                } else {
+                    tripDetails[0].drivernameGo = "none"
+
+                }
+                if (drivernameBack[0]) {                
+                    tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                } else {
+                    tripDetails[0].vehicleIDBack = "none"
+                }
                 const allTrip = tripDetails[0];
                 allTripsDetails.push(allTrip);
             })
@@ -585,8 +645,19 @@ router8.get("/worktrips", userAuth, async (req, res) => {//completed4
             await Promise.all(
                 Array.from(matchingResultsdistination2).map(async trip => {
                     const tripDetails = await query('select * from trips where id = ?', trip);
-                    const drivername = await query("select fullName from driver where id = ?", [tripDetails[0].driverid]);
-                    tripDetails[0].driverName = drivername[0].fullName
+                    const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                    const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+                    if (drivernameGo[0]) {
+                        tripDetails[0].driveridGo = drivernameGo[0].fullName
+                    } else {
+                        tripDetails[0].drivernameGo = "none"
+
+                    }
+                    if (drivernameBack[0]) {
+                        tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                    } else {
+                        tripDetails[0].vehicleIDBack = "none"
+                    }
                     const allTrip = tripDetails[0];
                     allTripsDetails.push(allTrip);
                 })
@@ -712,8 +783,19 @@ router8.get("/alltrips", autherized, async (req, res) => {//completed4
         }
 
         await Promise.all(data.result.map(async trip => {
-            const drivername = await query("select fullName from driver where id = ?", [trip.driverid]);
-            trip.driverName = drivername[0].fullName
+            const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+            const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+            if (drivernameGo[0]) {
+                tripDetails[0].driveridGo = drivernameGo[0].fullName
+            } else {
+                tripDetails[0].drivernameGo = "none"
+
+            }
+            if (drivernameBack[0]) {
+                tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+            } else {
+                tripDetails[0].vehicleIDBack = "none"
+            }
         }))
         return res.status(200).json({
             status: true,
@@ -783,7 +865,6 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
         }
         const { page, limit } = req.query;
         const { goBack } = req.body
-        // console.log(limit && page && goBack);
         if (!(Boolean(limit) && Boolean(page) && (goBack == 1 || goBack == 0))) {
             return res.status(400).json({
                 status: false,
@@ -828,8 +909,19 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
                 });
             } else {
                 await Promise.all(tripsdata.result.map(async trip => {
-                    const drivername = await query("select fullName from driver where id = ?", [trip.driveridGo]);
-                    trip.driverName = drivername[0].fullName
+                    const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                    const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+                    if (drivernameGo[0]) {
+                        tripDetails[0].driveridGo = drivernameGo[0].fullName
+                    } else {
+                        tripDetails[0].drivernameGo = "none"
+
+                    }
+                    if (drivernameBack[0]) {
+                        tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                    } else {
+                        tripDetails[0].vehicleIDBack = "none"
+                    }
                     delete trip.startHBack
                     delete trip.endHBack
                 }))
@@ -872,8 +964,19 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
         }
         else {
             await Promise.all(tripsdata.result.map(async trip => {
-                const drivername = await query("select fullName from driver where id = ?", [trip.driveridBack]);
-                trip.driverName = drivername[0].fullName
+                const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+                const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+                if (drivernameGo[0]) {
+                    tripDetails[0].driveridGo = drivernameGo[0].fullName
+                } else {
+                    tripDetails[0].drivernameGo = "none"
+
+                }
+                if (drivernameBack[0]) {
+                    tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+                } else {
+                    tripDetails[0].vehicleIDBack = "none"
+                }
                 delete trip.startHGo
                 delete trip.endHGo
             }))
@@ -903,5 +1006,6 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
 
 module.exports = {
     router8: router8,
-    isFloat: isFloat
+    isFloat: isFloat,
+    validateCoordinates: validateCoordinates
 };

@@ -188,7 +188,7 @@ router6.get("/inactive", adminAuth, async (req, res) => {// completed4
     }
 });
 
-//========================== get users ==========================//
+// //========================== get users ==========================//
 
 router6.get("/viewusers", adminAuth, async (req, res) => {//completed4
     try {
@@ -375,7 +375,14 @@ const registrationValidationRules = [
     body('phone').isString().withMessage('validation.phoneNotExists'),
     body('email').isEmail().withMessage('validation.emailNotExists'),
     body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
-    body('homeAddress').isString().withMessage('validation.homeAddressNotExists'),
+    body('homeAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.homeAddressNotExists");
+            }
+            return true;
+        }),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
     body('gender').isNumeric().withMessage('validation.genderNotExists'),
     body('emiratesID').isNumeric().withMessage('validation.nationalityIDNotExists'),
@@ -698,14 +705,69 @@ router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
 
 
 //================================= create new vehicle  =================================//
+const isFloat = require("./travelsOperations.js").isFloat
+const validateLocationAddress = (value, { req }) => {
+    const { locationlong } = req.body;
+
+    if ((!isFloat(locationlong)) || (parseFloat(locationlong) < -180.0 || parseFloat(locationlong) > 180.0)) {
+
+        throw new Error('validation.currentAddressNotExists');
+    }
+    return true;
+};
+const validateLocationAddress2 = (value, { req }) => {
+    const { locationlat } = req.body;
+
+    if ((!isFloat(locationlat)) || (parseFloat(locationlat) < -85.05112878 || parseFloat(locationlat) > 85.05112878)) {
+
+        throw new Error('validation.currentAddressNotExists');
+    }
+    return true;
+};
 const vehicleValidationRules = [
-    body('model').isString().withMessage('validation.modelNotExists'),
+    body('time').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.TimeNotExists');
+        }
+        const hours = parseInt(value.substring(0, 2));
+        const minutes = parseInt(value.substring(2, 4));
+        const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+        if (!timeRegex.test(value) || hours >= 24 || minutes >= 60) {
+            throw new Error('validation.TimeNotExists');
+        }
+        return true;
+    }),
+    body('locationlat').custom(validateLocationAddress2),
+    body('locationlong').custom(validateLocationAddress),
+    body('model')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.modelNotExists");
+            }
+            return true;
+        }),
     body('vehicleNum').isNumeric().withMessage('validation.vehicleNumNotExists'),
+    body('companyID').isNumeric().withMessage('validation.companyNotexists'),
     body('seats').isNumeric().withMessage('validation.seatsNotExists'),
-    body('vehiclecolorEN').isString().withMessage('validation.vehiclecolorENNotExists'),
-    body('vehiclecolorAR').isString().withMessage('validation.vehiclecolorARNotExists'),
+    body('vehiclecolorEN')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.vehiclecolorENNotExists");
+            }
+            return true;
+        }),
+    body('vehiclecolorAR')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.vehiclecolorARNotExists");
+            }
+            return true;
+        }),
 ];
-router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, res) => {//completed
+router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, res) => {//complete
     try {
         //============  Check if there are any validation errors ============
 
@@ -726,13 +788,28 @@ router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, re
                 },
             });
         }
-        const { model, vehicleNum, seats, vehiclecolorEN, vehiclecolorAR  }=req.body
+        const { model, vehicleNum, seats, vehiclecolorEN, vehiclecolorAR, companyID, time, locationlong, locationlat } = req.body
+
+        const companyExists = await query("select * from companies where id=?", companyID)
+        if (!companyExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.companyIDNotexists"),
+                data: {},
+                errors: {}
+            });
+        }
         const vehicleData = {
             model: model,
             vehicleNum: vehicleNum,
             seats: seats,
             vehiclecolorEN: vehiclecolorEN,
-            vehiclecolorAR: vehiclecolorAR
+            vehiclecolorAR: vehiclecolorAR,
+            companyID: companyID,
+            time: time,
+            locationlat: locationlat,
+            locationlong: locationlong
         }
         await query("insert into vehicles set ?", vehicleData);
 
@@ -756,14 +833,274 @@ router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, re
         });
     }
 });
+//=============================================== delete a vichle======================================
+router6.delete("/deletevehicle", adminAuth, async (req, res) => {//complete
+    try {
+        if (!req.query.id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("validation.novehicleID"),
+                data: {},
+                errors: {}
+            });
+        }
+        const vehicleExists = await query("select * from vehicles where id=?", req.query.id)
+        if (!vehicleExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.novehicle"),
+                data: {},
+                errors: {}
+            });
+        }
+        await query("delete from vehicles where id=?", req.query.id)
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("deleted"),
+            data:{},
+            errors: {},
 
+        })
 
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//=============================================== delete a company======================================
+router6.delete("/deletecompany", adminAuth, async (req, res) => {//complete
+    try {
+        if (!req.query.id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("validation.companyIDNotExists"),
+                data: {},
+                errors: {}
+            });
+        }
+        const vehicleExists = await query("select * from companies where id=?", req.query.id)
+        if (!vehicleExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.nocompanies"),
+                data: {},
+                errors: {}
+            });
+        }
+        await query("delete from companies where id=?", req.query.id)
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("deleted"),
+            data: {},
+            errors: {},
+
+        })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//=============================================== add a company======================================
+const companyValidationRules = [body('companyName')
+    .custom((value, { req }) => {
+        if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+            throw new Error("validation.companyNameNotexists");
+        }
+        return true;
+    })
+]
+router6.post("/createcompany", companyValidationRules, adminAuth, async (req, res) => {//complete
+    try {
+        //============  Check if there are any validation errors ============
+
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const errorlink = errors.array();
+            const translatedErrors = errors.array().map(error => ({
+                ...error,
+                msg: req.t(error.msg)
+            }));
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {
+                    general: translatedErrors
+                },
+            });
+        }
+        const { companyName } = req.body
+
+        const companyExists = await query("select * from companies where companyName=?", companyName)
+        if (companyExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.companyNameExists"),
+                data: {},
+                errors: {}
+            });
+        }
+        const companyData = {
+            companyName: companyName
+        }
+        await query("insert into companies set ?", companyData);
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("added"),
+            data: {},
+            errors: {},
+
+        })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+// =============================================== view companies ======================================
+
+router6.get("/companies", adminAuth, async (req, res) => {//complete
+    try {
+        const companyExists = await query("select * from companies")
+        if (!companyExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.companiesNotExists"),
+                data: {},
+                errors: {}
+            });
+        }
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: companyExists,
+            errors: {},
+
+        })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//============================== get vehicles with company id===========================
+router6.get("/vehicless", adminAuth, async (req, res) => {//complete
+    try {
+        if (!req.query.id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.companyIDNotExists"),
+                data: {},
+                errors: {}
+            });
+        }
+        const companyExists = await query("select * from companies where id=? ",req.query.id)
+        if (!companyExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.companyNotExists"),
+                data: {},
+                errors: {}
+            });
+        }
+        const vehicles = await query("select * from vehicles where companyID=? ", req.query.id)
+        if (!vehicles[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.novehicles"),
+                data: {},
+                errors: {}
+            });
+        }
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: vehicles,
+            errors: {},
+
+        })
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 //================================= create new maintenance for vehicle  =================================//
 const menValidationRules = [
-    body('vehicleID').isString().withMessage('validation.modelNotExists'),
-    body('content').isString().withMessage('validation.contentNotExists'),
-    body('withHow').isString().withMessage('validation.withHowNotExists'),
+    body('vehicleID')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.vehicleIDNotExists");
+            }
+            return true;
+    }),
+    body('content')
+            .custom((value, { req }) => {
+                if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                    throw new Error("validation.contentNotExists");
+                }
+                return true;
+    }),
+    body('withHow')
+            .custom((value, { req }) => {
+                    if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                        throw new Error("validation.withHowNotExists");
+                    }
+                    return true;
+    })
 ];
 router6.post("/createmaintenance", menValidationRules, adminAuth, async (req, res) => {//completed
     try {
@@ -879,7 +1216,55 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
     }
 });
 
+//==========================================  add promo and send ==========================================//
 
+router6.post("/addpromo", adminAuth, async (req, res) => {//incompleted
+    try {
+        const { promo } = req.body
+
+        if (!promo) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.enterPromo"),
+                errors: {},
+                data: {}
+            });
+        }
+
+        // const termsexists = await query("select * from variety where id=2");
+        // if (termsexists[0].promo) {
+            await query("update variety set promo = ? where id=2", promo);//order by conditions
+
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("updated"),
+                errors: {},
+                data: {}
+            })
+        // }
+        // const subject = { conditions: req.body.conditions }
+        // await query("update  variety set  promo= ? where id=2", promo);
+        // //send promo with firebase or email
+        // return res.status(200).json({
+        //     status: true,
+        //     code: 200,
+        //     msg: req.t("added"),
+        //     errors: {},
+        //     data: {}
+        // })
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            errors: { serverError: err },
+            data: {}
+        });
+    }
+});
+// "noPromo": "there is no fqa to delete",
 
 module.exports = router6;
 

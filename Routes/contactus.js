@@ -46,7 +46,14 @@ const otpValidationRules = [
     ,
     body('email').isEmail().withMessage('validation.emailNotExists'),
     body('phone').isString().withMessage("validation.phoneNotExists"),
-    body('subject').isString().withMessage('validation.subjectNotExists'),
+    body('subject')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.subjectNotExists");
+            }
+            return true;
+        }),
 ];
 
 router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {

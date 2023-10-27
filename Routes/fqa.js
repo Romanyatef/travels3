@@ -173,53 +173,7 @@ router3.get("/view", async (req, res) => {//completed
 
 
 
-//==========================================  add promo ==========================================//
 
-router3.post("/addpromo", adminAuth, async (req, res) => {//completed
-    try {
-        const { promo } = req.body
-
-        if (!promo) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.enterPromo"),
-                errors: {},
-                data: {}
-            });
-        }
-
-        const termsexists = await query("select * from variety where id=2");
-        if (termsexists[0].promo) {
-            await query("update variety set promo = ? where id=2", promo);//order by conditions
-            return res.status(200).json({
-                status: true,
-                code: 200,
-                msg: req.t("updated"),
-                errors: {},
-                data: {}
-            })
-        }
-        const subject = { conditions: req.body.conditions }
-        await query("update  variety set  promo= ? where id=2", promo);
-        return res.status(200).json({
-            status: true,
-            code: 200,
-            msg: req.t("added"),
-            errors: {},
-            data: {}
-        })
-    } catch (err) {
-        return res.status(500).json({
-            status: false,
-            code: 500,
-            msg: "",
-            errors: { serverError: err },
-            data: {}
-        });
-    }
-});
-// "noPromo": "there is no fqa to delete",
 
 
 

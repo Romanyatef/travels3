@@ -11,7 +11,7 @@ const userAuthlog = require("../middleware/lodingAuth.js");
 const autherized = require("../middleware/autherized.js");
 const fs = require("fs");
 const phoneNumber = require('libphonenumber-js')
-// const redis = require('redis');
+const redis = require('redis');
 const axios = require('axios');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
 const registerAuth = require("../middleware/registerAuth.js")
@@ -79,19 +79,17 @@ async function generateOTP(token) {
 
 // }
 async function checkExists(phone) {
-    const value2 = await query("select value from otpstoring where masterkey=? ", phone);
-    console.log(value2);
-    const value = value2[0]
+    const value2 = await query("select * from otpstoring where masterkey=? ", phone);
     const returnValue = {
         status: true
     }
-    if (value) {
-        returnValue.value1 = value;
-        return returnValue
-    } else {
+    if (!value2[0]) {
         returnValue.status = false
         return returnValue;
     }
+    const value = value2[0].value
+        returnValue.value1 = value; 
+        return returnValue
 
 }
 async function insertvalue(masterkey, value) {
@@ -100,6 +98,12 @@ async function insertvalue(masterkey, value) {
         value: value
     }
     await query("insert into otpstoring set ?", pair);
+}
+async function updatevalue(masterkey, value) {
+    const pair = {
+        value: value
+    }
+    await query("update otpstoring set ? where masterkey=?", [pair, masterkey]);
 }
 async function deletevalue(masterkey) {
     await query("delete from otpstoring where masterkey=?", masterkey);
@@ -678,7 +682,7 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
     }
 });
 
-const passValidationRules = [body('email').isEmail().withMessage("validation.emailNotExists")];
+const passValidationRules = [body('phone').isString().withMessage("validation.phoneNotExists")];
 
 //================================= FORGET PASSWORD =================================//
 router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
@@ -700,10 +704,10 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
                 },
             });
         }
-        const { email } = req.body;
+        const { phone } = req.body;
 
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-        const user = await query("select * from users where email=?", email);
+        const user = await query("select * from users where phone=?", phone);
         if (user[0]) {
             const generatedOTP = await generateOTP();
             value5 = await checkExists(user[0].phone);
@@ -742,7 +746,7 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
         return res.status(404).json({
             status: false,
             code: 404,
-            msg: req.t("error.emailNotExists"),
+            msg: req.t("validation.phoneNotExists"),
             data: {},
             errors: {},
         });
@@ -767,11 +771,11 @@ const passValidationRules2 = [
             }
             return true;
         }),
-    body("email").isEmail().withMessage("validation.emailNotExists"),
+    body("phone").isString().withMessage("validation.phoneNotExists"),
 ];
 router.post("/pass", passValidationRules2, async (req, res) => {//completed
     try {
-        const { newPass, otp, email } = req.body;
+        const { otp, phone } = req.body;
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -791,19 +795,20 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
             });
         }
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-        const user = await query("select * from users where email=?", email);
+        const user = await query("select * from users where phone=?", phone);
 
         //============ conferm otp   ============
         if (user[0]) {
-            const value = await checkExists(user[0].phone)
-// value.value1 
+            let value = await checkExists(user[0].phone)
+            // value.value1 
+            if (value.status) {
             if (999999== otp) {
                 // await redisClient.setEx(user[0].phone, 600, "1", (err) => {
-                //     if (err) {
+                //     if (err) { 
                 //         throw err;
                 //     }
                 // });
-                await insertvalue(user[0].phone, "1");
+                await updatevalue(user[0].phone, "1");
                 res.status(200).json({
                     status: true,
                     code: 200,
@@ -815,7 +820,9 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
                     await deletevalue(user[0].phone);
                 }, 10 * 60000);
                 return;
-            } else {
+            }  
+            }
+            else {
                 return res.status(400).json({
                     status: false,
                     code: 400,
@@ -828,7 +835,7 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
         return res.status(404).json({
             status: false,
             code: 404,
-            msg: req.t("error.emailNotExists"),
+            msg: req.t("error.phoneNotExists"),
             data: {},
             errors: {},
         });
@@ -848,11 +855,11 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
 //============ conferm otp for pasword editing ==============//
 const passValidationRules3 = [
     body("newPass").isLength({ min: 8, max: 25 }).withMessage("validation.passwordNotExists"),
-    body("email").isEmail().withMessage("validation.emailNotExists"),
+    body("phone").isString().withMessage("validation.phoneNotExists"),
 ];
 router.post("/pass2", passValidationRules3, async (req, res) => {//completed
     try {
-        const { newPass, email } = req.body;
+        const { newPass, phone } = req.body;
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -871,12 +878,13 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
             });
         }
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-        const user = await query("select * from users where email=?", email);
+        const user = await query("select * from users where phone=?", phone);
+        console.log(user[0]);
         //============ conferm otp   ============
         if (user[0]) {
             const value = await checkExists(user[0].phone)
-
-            if (value.value1) {
+            console.log(value.status);
+            if (value.status) {
                 // await redisClient.del(user[0].phone, async (err) => {
                 //     if (err) {
                 //         throw err;
@@ -908,7 +916,7 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
         return res.status(404).json({
             status: false,
             code: 404,
-            msg: req.t("error.emailNotExists"),
+            msg: req.t("error.phoneNotExists"),
             data: {},
             errors: {},
         });

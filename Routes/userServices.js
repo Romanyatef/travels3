@@ -10,6 +10,7 @@ const autherized = require("../middleware/autherized.js");
 const fs = require("fs");
 const moment = require("moment-timezone");
 const { v4: uuidv4 } = require("uuid");
+const { title } = require("process");
 
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
 
@@ -117,7 +118,14 @@ const creditValidationRules = [
         }
         return true;
     }),
-    body("type").isString().withMessage("validation.typeNotExists"),
+    body('type')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.typeNotExists");
+            }
+            return true;
+        }),
     body("cnnNumber").isNumeric().withMessage("validation.cnnNotExists"),
     body("cvv").isNumeric().withMessage("validation.cvvNotExists"),
     body("exprity").isISO8601().withMessage("validation.exprityNotExists"),
@@ -442,129 +450,301 @@ router2.post("/book", autherized, async (req, res) => {
         });
     }
 });
-//==========================================  generate text  ==========================================//
-// router2.post("/generate", autherized, async (req, res) => {//incomplete
-//     try {
-//         const autherized = res.locals.autherized;
-//         const exists = await query(
-//             "select * from qrcodes where userID=?",
-//             autherized.id
-//         );
-//         const generatedtext = uuidv4();
-//         if (exists) {
-//             await query("update qrcodes set qrcodetext=? where userID =?", [
-//                 generatedtext,
-//                 autherized.id,
-//             ]);
-//             return res.status(200).json({
-//                 status: true,
-//                 code: 200,
-//                 msg: "",
-//                 data: { generatedText: generatedtext + ":" + autherized.id },
-//                 errors: {},
-//             });
-//         }
-//         const userQrCode = {
-//             userID: autherized.id,
-//             qrcodetext: generatedtext,
-//         };
-//         await query("insert into qrcodes set ? ", userQrCode);
+// ==========================================  generate text  ==========================================//
+router2.post("/generate", autherized, async (req, res) => {//incomplete//add trip id to generated text to use it later in the scan for which trip
+    try {
+        const autherized = res.locals.autherized;
+        const exists = await query(
+            "select * from qrcodes where userID=?",
+            autherized.id
+        );
+        const generatedtext = uuidv4();
+        if (exists[0]) {
+            // await query("delete from qrcodes  where userID =?", [autherized.id]);
+            if (!exists[0].present) {
+                return res.status(200).json({
+                    status: true,
+                    code: 200,
+                    msg: "",
+                    data: { generatedText: exists[0].qrcodetext + ":" + autherized.id },
+                    errors: {},
+                });
+            }
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.checkoutFirst"),
+                data: {},
+                errors: {},
+            });
+        }
+        const userQrCode = {
+            userID: autherized.id,
+            qrcodetext: generatedtext,
+        };
+        await query("insert into qrcodes set ? ", userQrCode);
 
-//         return res.status(200).json({
-//             status: true,
-//             code: 200,
-//             msg: "",
-//             data: { generatedText: generatedtext + ":" + autherized.id },
-//             errors: {},
-//         });
-//     } catch (err) {
-//         return res.status(500).json({
-//             status: false,
-//             code: 500,
-//             msg: "",
-//             data: {},
-//             errors: { serverError: err },
-//         });
-//     }
-// });
-// //==========================================  scan text  ==========================================//
-// const datascanned = [
-//     body("generatedtext").isString().withMessage("validation.generatedtext"),
-// ];
-// router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
-//     //completed
-//     try {
-//         if (!errors.isEmpty()) {
-//             const errorlink = errors.array();
-//             const translatedErrors = errors.array().map((error) => ({
-//                 ...error,
-//                 msg: req.t(error.msg),
-//             }));
-//             return res.status(400).json({
-//                 status: false,
-//                 code: 400,
-//                 data: {},
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: { generatedText: generatedtext + ":" + autherized.id },
+            errors: {},
+        });
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//==========================================  scan text  ==========================================//
+const datascanned = [
+    body('generatedtext')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
 
-//                 errors: {
-//                     general: { ...translatedErrors },
-//                 },
-//             });
-//         }
-//         const splitGeneratedtext = req.body.generatedtext.split(":");
-//         const generatedtextData = splitGeneratedtext[0];
-//         const id = splitGeneratedtext[1];
-//         const exist = await query("select * from qrcodetext where userID=?", id);
-//         if (exist[0]) {
-//             const present = exist[0].present;
-//             if (present) {
-//                 if (exist[0].qrcodetext == generatedtextData) {
-//                     await query("update qrcodetext set present=?  where userID=?", [
-//                         null,
-//                         id,
-//                     ]);
-//                     return res.status(200).json({
-//                         status: true,
-//                         code: 200,
-//                         msg: "",
-//                         data: {},
-//                         errors: {},
-//                     });
-//                 }
-//                 if (!present) {
-//                     if (exist[0].qrcodetext == generatedtextData) {
-//                         await query("update qrcodetext set present=?  where userID=?", [
-//                             1,
-//                             id,
-//                         ]);
-//                         return res.status(200).json({
-//                             status: true,
-//                             code: 200,
-//                             msg: "",
-//                             data: {},
-//                             errors: {},
-//                         });
-//                     }
-//                 }
-//             }
-//         }
+                throw new Error("error.generatedtext");
+            }
+            return true;
+        }),
+    // body("tripID").isString().withMessage("error.tripIDNOTExistsID"),
+];
+router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete// tripid or scan for which trip
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const errorlink = errors.array();
+            const translatedErrors = errors.array().map((error) => ({
+                ...error,
+                msg: req.t(error.msg),
+            }));
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                data: {},
+                errors: {
+                    general: { ...translatedErrors },
+                },
+            });
+        }
+        const autherized = res.locals.autherized;
+        const splitGeneratedtext = req.body.generatedtext.split(":");
+        const generatedtextData = splitGeneratedtext[0];
+        const id = splitGeneratedtext[1];
+        const userGExist = await query("select * from qrcodes where userID=? AND qrcodetext=?", [autherized.id, generatedtextData]);
+        if (!userGExist[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.textnotExists"),
+                data: {},
+                errors: {},
+            });
+        }
 
-//         return res.status(400).json({
-//             status: false,
-//             code: 400,
-//             msg: req.t("error.checkError"),
-//             data: {},
-//             errors: {},
-//         });
-//     } catch (err) {
-//         return res.status(500).json({
-//             status: false,
-//             code: 500,
-//             msg: "",
-//             data: {},
-//             errors: { serverError: err },
-//         });
-//     }
-// });
+
+        const present = userGExist[0].present;
+        if (present) {
+                await query("delete from qrcodes where userID=?", [
+                    id,
+                ]);
+                return res.status(200).json({
+                    status: true,
+                    code: 200,
+                    msg: req.t("checkedout"),
+                    data: {},
+                    errors: {},
+                });
+        }
+        if (!present) {
+                
+                    await query("update qrcodes set present=?  where userID=?", [
+                        1,
+                        id,
+                    ]);
+
+                    return res.status(200).json({
+                        status: true,
+                        code: 200,
+                        msg: req.t("checkedin"),
+                        data: {},
+                        errors: {},
+                    });
+                }
+
+        return res.status(400).json({
+            status: false,
+            code: 400,
+            msg: req.t("error.checkError"),
+            data: {},
+            errors: {},
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//==========================================  add address   ==========================================//
+const isFloat = require("./travelsOperations.js").isFloat
+const favAddress1 = (value, { req }) => {
+    const { longitude } = req.body;
+    if ((!isFloat(longitude)) ||( parseFloat(longitude) < -180.0 || parseFloat(longitude) > 180.0)) {
+        throw new Error('validation.AddressNotExist');
+    }
+    return true;
+};
+const favAddress2 = (value, { req }) => {
+    const { latitude } = req.body;
+    if ((!isFloat(latitude)  || (parseFloat(latitude) < -85.05112878 || parseFloat(latitude) > 85.05112878 ))) {
+        throw new Error('validation.AddressNotExist');
+    }
+    return true;
+};
+const addAdress = [
+    body('title')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+                throw new Error("validation.titleNotExists");
+            }
+            return true;
+        }),
+    body("longitude").custom(favAddress1),
+    body("latitude").custom(favAddress2),
+];
+router2.post("/fav", addAdress, autherized, async (req, res) => {//complete
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const errorlink = errors.array();
+            const translatedErrors = errors.array().map((error) => ({
+                ...error,
+                msg: req.t(error.msg),
+            }));
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                data: {},
+
+                errors: {
+                    general: { ...translatedErrors },
+                },
+            });
+        }
+        const autherized = res.locals.autherized;
+        const { title, longitude, latitude }=req.body
+        const favAddres = {
+            title: title,
+            userID: autherized.id,
+            longitude: longitude,
+            latitude: latitude
+        }
+        await query("insert into favaddress set ?", favAddres)
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("added"),
+            data: {},
+            errors: {},
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//==========================================  get fav address  ==========================================//
+router2.get("/fav", autherized, async (req, res) => {//complete
+    try {
+        const autherized = res.locals.autherized;
+        const favAddresses = await query("select * from favaddress where userID =? ", autherized.id)
+        if (favAddresses[0]) {
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: "",
+                data: favAddresses,
+                errors: {},
+            });
+        }
+        return res.status(400).json({
+            status: false,
+            code: 400,
+            msg: req.t("error.adressesNotExists"),
+            data: {},
+            errors: {},
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//==========================================  get fav address  ==========================================//
+router2.post("/promo", autherized, async (req, res) => {//incomplete
+    try {
+        const {promo}=req.body 
+        if (!promo) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("validation.promoNotExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        // const autherized = res.locals.autherized;
+        const promoExist = await query("select promo from variety where id=2")[0].promo;
+        if (promoExist == promo) {
+            //execute the operations of the promo code
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("promo"),
+                data: {},
+                errors: {},
+            });
+        }
+        return res.status(400).json({
+            status: false,
+            code: 400,
+            msg: req.t("error.promoNotcorrect"),
+            data: {},
+            errors: {},
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 module.exports = router2;
 

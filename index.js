@@ -72,7 +72,7 @@ app.get("/healthz", (req, res) => {
     res.status(200).send("good");
 })
 
-app.listen(process.env.PORT || 80, process.env.HOST, () => {
+app.listen(process.env.PORT || 4000, process.env.HOST, () => {
     console.log("the web server is running on port :" + process.env.PORT);
 })
 
@@ -90,6 +90,40 @@ app.use("/nationality", nationality);
 app.use("/adminServices", adminServices);
 app.use("", imagesAuthAPI);
 app.use("/trip", travelsOperations.router8);
+const admin = require('firebase-admin');
+
+const serviceAccount = require('./trips-75f46-firebase-adminsdk-in1hu-312fdd2d62.json');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+const sendnotification = (title,body,deviceToken) => {
+    const payload = {
+    notification: {
+        title: title,
+        body: body
+    }
+    };
+    const options = {
+    priority: 'high',
+    timeToLive: 60 * 60 * 24 // Notification will be kept for 24 hours if the device is offline
+    };
+    admin.messaging().sendToDevice(deviceToken, payload, options)
+    .then((response) => {
+        console.log('Notification sent successfully:', response);
+        return true
+    })
+    .catch((error) => {
+        console.log('Error sending notification:', error);
+        return false
+    });
+
+}
+
+
+
+
+
 
 // console.log(moment(new Date(new Date().setHours(..."10:00:12".toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss"));
 
@@ -110,22 +144,23 @@ app.use("/trip", travelsOperations.router8);
 
 //====================================================================
 // send notification by arrival time
-// const cronExpression2 = `*/5 * * * *`; // Runs every 5 minutes
-// cron.schedule(cronExpression2, async () => {//incomplete//send notification with firebase
-//     const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
+const cronExpression2 = `*/5 * * * *`; // Runs every 5 minutes
+cron.schedule(cronExpression2, async () => {//incomplete//send notification with firebase
+    const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
 
-//     const trips = await query("select * from trips where status=1")
-//     if (trips[0]) {
-//         await Promise.all(trips.map(async trip => {
-//             const stations = await query("select stations where tripID=? AND MINUTE(timeArriveBack) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE)) OR MINUTE(timeArriveGo) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE))", [trip.id, currentTime, currentTime])
+    const trips = await query("select * from trips where status=1")
+    if (trips[0]) {
+        await Promise.all(trips.map(async trip => {
+            const stations = await query("select stations where tripID=? AND MINUTE(timeArriveBack) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE)) OR MINUTE(timeArriveGo) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE))", [trip.id, currentTime, currentTime])
             
-//         }))
-//     }
+            sendnotification()
+        }))
+    }
 
-    // const stations = await query("select * from stations");
+    const stations = await query("select * from stations");
 
 
-// });
+});
 //*********************************************************************
 
 // cron.schedule(`* * * * *`, async () => {//completed404//update trip status 
@@ -152,6 +187,7 @@ app.use("/trip", travelsOperations.router8);
 
 
 
-// "redis": "^4.6.8",
-
+// REDIS_PASSWORD = 1BQcvbtqWLaWGI5TIyBjXmJWIpL4qJIU
+// REDIS_HOST = redis - 18918.c285.us - west - 2 - 2.ec2.cloud.redislabs.com
+// REDIS_PORT = 18918
 
