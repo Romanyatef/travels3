@@ -61,23 +61,6 @@ async function generateOTP(token) {
 // redisClient.on('error', err => console.log('Redis Client Error', err));
 // redisClient.connect();
 
-// async function checkExists(phone) {
-//     const value = await redisClient.get(phone, (err) => {
-//         if (err)
-//             throw err
-//     })
-//     const returnValue = {
-//         status: true
-//     }
-//     if (value != null) {
-//         returnValue.value1 = value;
-//         return returnValue
-//     } else {
-//         returnValue.status = false
-//         return returnValue;
-//     }
-
-// }
 async function checkExists(phone) {
     const value2 = await query("select * from otpstoring where masterkey=? ", phone);
     const returnValue = {
@@ -108,28 +91,12 @@ async function updatevalue(masterkey, value) {
 async function deletevalue(masterkey) {
     await query("delete from otpstoring where masterkey=?", masterkey);
 }
-// const validateHomeAddress = (value, { req }) => {
-//     const { homeAddressLat, homeAddressLong } = req.body;
-
-//     if (!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) {
-//         throw new Error('validation.homeAddressNotExists');
-//     }
-
-//     const lat = parseFloat(homeAddressLat);
-//     const long = parseFloat(homeAddressLong);
-
-//     if (lat < -85.05112878 || lat > 85.05112878 || long < -180.0 || long > 180.0) {
-//         throw new Error('validation.homeAddressNotExists');
-//     }
-
-//     return true;
-// };
 const validateHomeAddress = (value, { req }) => {
     const { homeAddressLat, homeAddressLong } = req.body;
 
     if ((!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) || (parseFloat(homeAddressLat) < -85.05112878 || parseFloat(homeAddressLat) > 85.05112878 || parseFloat(homeAddressLong) < -180.0 || parseFloat(homeAddressLong) > 180.0)) {
         
-        throw new Error('validation.workAddressNotExists');
+        throw new Error('validation.homeAddressNotExists2');
     }
     return true;
 };
@@ -235,15 +202,16 @@ const registrationValidationRules = [
     body('userName')
         .custom((value, { req }) => {
             if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
-
                 throw new Error("validation.namelong2");
             }
             return true;
         }),
-    body('homeAddressLat').custom(validateHomeAddress),
-    body('homeAddressLong').custom(validateHomeAddress),
-    body('workAddressLat').custom(validateWorkAddress),
-    body('workAddressLong').custom(validateWorkAddress),
+    body('homeAddress').isNumeric().withMessage("validation.homeAddressNotExists"),
+    // body('homeAddressLat').custom(validateHomeAddress),
+    // body('homeAddressLong').custom(validateHomeAddress),
+    // body('workAddressLat').custom(validateWorkAddress),
+    // body('workAddressLong').custom(validateWorkAddress),
+    body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
     body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
@@ -293,7 +261,7 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
 
 
         //============ Extract data from the request body ============
-        const { otp, email, password, phone, type, userName, nationalityID, homeAddressLat, homeAddressLong, workAddressLong, workAddressLat, birthDate, gender, specialNeeds, conditions } = req.body;
+        const { otp, email, password, phone, type, userName, nationalityID, homeAddress, workAddress, birthDate, gender, specialNeeds, conditions } = req.body;
         const observer = {
             status: true,
             errors: {}
@@ -348,6 +316,18 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
         if (!(conditions == 1)) {
             observer.status = false
             observer.errors.termsAndConditions = req.t("error.noAgreeTerms")
+        }
+        //============ check work adress station and conditions  ============
+        const workAddressStation = await query("select * from stations where id=? AND startEnd=1",workAddress)
+        if (!workAddressStation[0]) {
+            observer.status = false
+            observer.errors.workAddress = req.t("error.stationIDNOTExists")
+        }
+        //============ check home adress station and conditions  ============
+        const homeAddressStation = await query("SELECT * FROM stations WHERE id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress));        console.log(homeAddressStation);
+        if (!homeAddressStation[0]) {
+            observer.status = false 
+            observer.errors.homeAddress = req.t("error.stationIDNOTExists")
         }
 
         //============ check phone existes in users  ============
@@ -439,10 +419,13 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
                 phone: phone,
                 profile_image: req.file.filename,
                 nationalityID: nationalityID,
-                workAddressLong: workAddressLong,
-                workAddressLat: workAddressLat,
-                homeAddressLong: homeAddressLong,
-                homeAddressLat: homeAddressLat,
+                // workAddressLong: workAddressLong,
+                // workAddressLat: workAddressLat,
+                // homeAddressLong: homeAddressLong,
+                // homeAddressLat: homeAddressLat,
+                workAddress: workAddress,
+                homeAddress: homeAddress,
+                // tripID: workAddressStation[0].tripID,
                 birthDate: birthDate,
                 gender: gender,
                 specialNeeds: specialNeeds || 0,
@@ -823,7 +806,7 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
 });
 //======================================= edit profile =======================================//
 
-router.post("/editProfile", upload.single("image"), otpValidationRules, autherized, async (req, res) => {
+router.post("/editProfile", upload.single("image"), registrationValidationRules, autherized, async (req, res) => {
     try {
         const autherized = res.locals.autherized;
         const observer = {
@@ -916,6 +899,19 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
             observer.status = false
             observer.errors.nationality = req.t("error.nationalityNotExists")
         }
+        //============ check work adress station and conditions  ============
+        const workAddressStation = await query("select * from stations where id=? AND startEnd=1",parseInt(workAddress))
+        if (!workAddressStation[0]) {
+            observer.status = false
+            observer.errors.workAddress = req.t("error.stationIDNOTExists")
+        }
+        //============ check home adress station and conditions  ============
+        const homeAddressStation = await query("select * from stations where id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress))
+        if (!homeAddressStation[0]) {
+            observer.status = false
+            observer.errors.homeAddress = req.t("error.stationIDNOTExists")
+        }
+
         //============ check phone existes in users  ============
         if (!(phone == autherized.phone)) {
             const phoneExists = await query("select * from users where phone = ?AND id <> ?", [phone, autherized.id]);
@@ -958,12 +954,12 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
 
         const userData = {
             userName: userName,
-            type: type,
             nationalityID: nationalityID,
             homeAddress: homeAddress,
             workAddress: workAddress,
             birthDate: birthDate,
             gender: gender,
+            tripID: workAddressStation[0].tripID,
             specialNeeds: specialNeeds || 0,
             countryCode: countryCode[0].countryCode
         }
@@ -1016,7 +1012,7 @@ router.post("/editProfile", upload.single("image"), otpValidationRules, autheriz
                 //     }
                 // });
                 await insertvalue(phone, generatedOTP);
-                console.log(await query("select * from otpstoring where masterkey=?",phone));
+                // console.log(await query("select * from otpstoring where masterkey=?",phone));
                 if (imageExists) {
                     fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
                 }
@@ -1125,7 +1121,7 @@ const confirmValidationRules = [
     body('nationalityID').isNumeric().withMessage('validation.countryCodeNotExists'),
     body('statusex').isNumeric().withMessage('validation.statusNotExists'),
 ];
-router.post("/confirmedit", autherized, confirmValidationRules, async (req, res) => {// completed
+router.post("/confirmedit", autherized, confirmValidationRules, async (req, res) => {// test
     try {
 
         const autherized = res.locals.autherized;

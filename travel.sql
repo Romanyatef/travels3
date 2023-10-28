@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 27, 2023 at 10:35 PM
+-- Generation Time: Oct 28, 2023 at 08:14 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -326,14 +326,11 @@ CREATE TABLE `users` (
   `specialNeeds` tinyint(1) NOT NULL COMMENT '0==>yes\r\n1==>no',
   `birthDate` date NOT NULL,
   `countryCode` varchar(4) NOT NULL,
-  `homeAddressLong` double NOT NULL,
-  `homeAddressLat` double NOT NULL,
-  `workAddressLong` double NOT NULL,
-  `workAddressLat` double NOT NULL,
+  `homeAddress` int(11) DEFAULT NULL,
+  `workAddress` int(11) DEFAULT NULL,
   `profile_image` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
   `type` enum('admin','user','bus','') NOT NULL,
-  `tripID` int(11) DEFAULT NULL,
   `counter` int(11) NOT NULL DEFAULT 0 COMMENT 'every user has 2 travels to the trip in the day as average',
   `token` varchar(255) NOT NULL,
   `deviceToken` varchar(255) DEFAULT NULL,
@@ -346,12 +343,13 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`, `birthDate`, `countryCode`, `homeAddressLong`, `homeAddressLat`, `workAddressLong`, `workAddressLat`, `profile_image`, `phone`, `type`, `tripID`, `counter`, `token`, `deviceToken`, `email`, `password`, `status`) VALUES
-(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593211797-715622718.jpg', '01223958296', 'user', 23, 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
-(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593328130-980953242.jpg', '01223958298', 'user', NULL, 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
-(25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24697, 30.06323, '1696593395318-874280431.jpg', '01223958292', 'user', NULL, 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
-(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 31.30224, 30.05845, 31.24695, 30.06323, '1696593688323-46490645.jpg', '01280151607', 'admin', NULL, 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
-(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 23.23, 23.23, 23.23, 23.32, '1698438896142-592115090.jpg', '01280151667', 'user', NULL, 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1);
+INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`, `birthDate`, `countryCode`, `homeAddress`, `workAddress`, `profile_image`, `phone`, `type`, `counter`, `token`, `deviceToken`, `email`, `password`, `status`) VALUES
+(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 152, 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
+(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
+(25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593395318-874280431.jpg', '01223958292', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
+(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593688323-46490645.jpg', '01280151607', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
+(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1698438896142-592115090.jpg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
+(33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 134, 152, '1698515946749-558071512.jpg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1);
 
 -- --------------------------------------------------------
 
@@ -505,7 +503,8 @@ ALTER TABLE `trips`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD KEY `users_ibfk_1` (`nationalityID`),
-  ADD KEY `tripID` (`tripID`);
+  ADD KEY `homeAddress` (`homeAddress`),
+  ADD KEY `workAddress` (`workAddress`);
 
 --
 -- Indexes for table `variety`
@@ -582,7 +581,7 @@ ALTER TABLE `nationalities`
 -- AUTO_INCREMENT for table `otpstoring`
 --
 ALTER TABLE `otpstoring`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `qrcodes`
@@ -606,7 +605,7 @@ ALTER TABLE `trips`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `variety`
@@ -688,7 +687,8 @@ ALTER TABLE `trips`
 --
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`nationalityID`) REFERENCES `nationalities` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `users_ibfk_2` FOREIGN KEY (`tripID`) REFERENCES `trips` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `users_ibfk_3` FOREIGN KEY (`homeAddress`) REFERENCES `stations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `users_ibfk_4` FOREIGN KEY (`workAddress`) REFERENCES `stations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `vehicles`

@@ -97,7 +97,7 @@ const serviceAccount = require('./trips-75f46-firebase-adminsdk-in1hu-312fdd2d62
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
-const sendnotification = (title,body,deviceToken) => {
+const sendnotification = async(title,body,deviceToken) => {
     const payload = {
     notification: {
         title: title,
@@ -153,7 +153,7 @@ cron.schedule(cronExpression2, async () => {//incomplete//send notification with
         await Promise.all(trips.map(async trip => {
             const stations = await query("select stations where tripID=? AND MINUTE(timeArriveBack) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE)) OR MINUTE(timeArriveGo) = MINUTE(DATE_ADD(?, INTERVAL 5 MINUTE))", [trip.id, currentTime, currentTime])
             
-            sendnotification()
+            await sendnotification()
         }))
     }
 
@@ -163,7 +163,7 @@ cron.schedule(cronExpression2, async () => {//incomplete//send notification with
 });
 //*********************************************************************
 
-// cron.schedule(`* * * * *`, async () => {//completed404//update trip status 
+// cron.schedule(`* * * * *`, async () => {//completed404//update trip status
 //     const trips = await query("select * from trips");
 //     const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
 
@@ -191,3 +191,4 @@ cron.schedule(cronExpression2, async () => {//incomplete//send notification with
 // REDIS_HOST = redis - 18918.c285.us - west - 2 - 2.ec2.cloud.redislabs.com
 // REDIS_PORT = 18918
 
+module.exports = sendnotification;

@@ -13,7 +13,7 @@ const phoneNumber = require('libphonenumber-js')
 const bcrypt = require("bcrypt");
 const { promises } = require('dns');
 const crypto = require("crypto");
-
+const sendnotification=require("../index.js")
 
 
 const paginatedResults = async (tableName, page, limit) => {
@@ -1254,6 +1254,61 @@ router6.post("/addpromo", adminAuth, async (req, res) => {//incompleted
         //     errors: {},
         //     data: {}
         // })
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            errors: { serverError: err },
+            data: {}
+        });
+    }
+});
+//==========================================  send a notification ==========================================//
+const sendnotificationbody = [body('message')
+    .custom((value, { req }) => {
+        if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+
+            throw new Error("validation.messageNotExists");
+        }
+        return true;
+    }),
+    body('id').isNumeric().withMessage("validation.userIDNOTExists")]
+router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, res) => {//incompleted
+    try {
+        const { id, message } = req.body
+        const userExists=await query("select * from users where id =?",id)
+        if (!userExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.noUser"),
+                errors: {},
+                data: {}
+            });
+        }
+        //+++++++++++     notification ==>we can modify it to be a kind of notification send in the request +++++++++++++  
+        const send=await sendnotification("notification")
+        // const termsexists = await query("select * from variety where id=2");
+        // if (termsexists[0].promo) {
+        if (send) {
+            // store the notification
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("send"),
+                errors: {},
+                data: {}
+            })
+        }
+
+        return res.status(400).json({
+            status: false,
+            code: 400,
+            msg: req.t("error.notsend"),
+            errors: {},
+            data: {}
+        });
     } catch (err) {
         return res.status(500).json({
             status: false,

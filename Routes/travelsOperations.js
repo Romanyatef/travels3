@@ -569,7 +569,7 @@ router8.get("/tripsforyou", requestTripValidation, userAuth, async (req, res) =>
 });
 
 //========================== get trips for you ==========================//
-router8.get("/worktrips", userAuth, async (req, res) => {//completed4
+router8.get("/worktrips", userAuth, async (req, res) => {//completed4*******************************************
     try {
         const user1 = res.locals.user;
         const latitudeCurrent = user1.homeAddressLat
@@ -752,7 +752,90 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
         });
     }
 });
+//========================== get all trip end stations ==========================//
+router8.get("/allendstations", async (req, res) => {//test
+    try {
+        const tripStations = await query("select * from stations where startEnd=?", 1);
+        if (!tripStations[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripEndStationsNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: tripStations,
+            errors: {},
+        });
 
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//========================== get  trip by end station ==========================//
+router8.get("/alltripstations", userAuth, async (req, res) => {//test
+    try {
+        const { id } = req.query;
+        if (!(id)) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.stationIDNOTExistsID"),
+                data: {},
+                errors: {},
+            });
+        }
+        const stationExist = await query("select * from stations where id=?", id)
+        if (!stationExist[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.stationIDNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        const trip = await query("select * from trips where id=?", stationExist[0].tripID);
+        if (!trip[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: trip,
+            errors: {},
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 //========================== get all trips  ==========================//
 router8.get("/alltrips", autherized, async (req, res) => {//completed4

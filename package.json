@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": " nodemon index"
+    "start": " nodemon index",
+    "start:proad": "pm2 delete travel ; pm2 start --name travel \"node index.js\""
   },
   "author": "romany",
   "license": "ISC",
