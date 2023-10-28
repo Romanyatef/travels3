@@ -94,6 +94,8 @@ const admin = require('firebase-admin');
 
 const serviceAccount = require('./trips-75f46-firebase-adminsdk-in1hu-312fdd2d62.json');
 
+// const serviceAccount = require('./travels3/carlift-9df91-firebase-adminsdk-mosd3-c31f0e8b99.json');
+
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -161,6 +163,7 @@ cron.schedule(cronExpression2, async () => {//incomplete//send notification with
 
 
 });
+// const user =await query ("select * from users where id=34")
 //*********************************************************************
 
 // cron.schedule(`* * * * *`, async () => {//completed404//update trip status

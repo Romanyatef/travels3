@@ -35,7 +35,7 @@ const paginatedResults = async (tableName, page, limit) => {
     return complaints;
 };
 
-const otpValidationRules = [
+const validationRules = [
     body('userName')
         .custom((value, { req }) => {
             if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length < 13 || value.length > 29) {
@@ -56,7 +56,7 @@ const otpValidationRules = [
         }),
 ];
 
-router6.post("/complaints", userAuth, otpValidationRules, async (req, res) => {
+router6.post("/complaints", userAuth, validationRules, async (req, res) => {
     try {
         //============  Check if there are any validation errors ============
         const errors = validationResult(req);
