@@ -8,8 +8,9 @@ PORT_DB=3306
 FROM=travels
 TO=201223958299
 TO1=atiaromany99@gmail.com
-REDIS_PORT=18918
 Vonage_APIKEY=9da37787
 Vonage_APISECERT=wybDaYkHH5pM4Pzs1~1~
 https://github.com/Romanyatef/travels3
 export GOOGLE_APPLICATION_CREDENTIALS="~/travel/travels3/carlift-9df91-firebase-adminsdk-mosd3-c31f0e8b99.json"
+PjcbHIT5
+
