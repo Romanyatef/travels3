@@ -206,7 +206,13 @@ const registrationValidationRules = [
             }
             return true;
         }),
-    body('homeAddress').isNumeric().withMessage("validation.homeAddressNotExists"),
+    body('homeAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+                throw new Error("validation.homeAddressNotExists");
+            }
+            return true;
+        }),
     // body('homeAddressLat').custom(validateHomeAddress),
     // body('homeAddressLong').custom(validateHomeAddress),
     // body('workAddressLat').custom(validateWorkAddress),
@@ -323,12 +329,12 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
             observer.status = false
             observer.errors.workAddress = req.t("error.stationIDNOTExists")
         }
-        //============ check home adress station and conditions  ============
-        const homeAddressStation = await query("SELECT * FROM stations WHERE id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress));        console.log(homeAddressStation);
-        if (!homeAddressStation[0]) {
-            observer.status = false 
-            observer.errors.homeAddress = req.t("error.stationIDNOTExists")
-        }
+        // //============ check home adress station and conditions  ============
+        // const homeAddressStation = await query("SELECT * FROM stations WHERE id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress));        console.log(homeAddressStation);
+        // if (!homeAddressStation[0]) {
+        //     observer.status = false 
+        //     observer.errors.homeAddress = req.t("error.stationIDNOTExists")
+        // }
 
         //============ check phone existes in users  ============
         const phoneExists = await query("select * from users where phone = ?", phone);
@@ -905,12 +911,12 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             observer.status = false
             observer.errors.workAddress = req.t("error.stationIDNOTExists")
         }
-        //============ check home adress station and conditions  ============
-        const homeAddressStation = await query("select * from stations where id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress))
-        if (!homeAddressStation[0]) {
-            observer.status = false
-            observer.errors.homeAddress = req.t("error.stationIDNOTExists")
-        }
+        // //============ check home adress station and conditions  ============
+        // const homeAddressStation = await query("select * from stations where id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress))
+        // if (!homeAddressStation[0]) {
+        //     observer.status = false
+        //     observer.errors.homeAddress = req.t("error.stationIDNOTExists")
+        // }
 
         //============ check phone existes in users  ============
         if (!(phone == autherized.phone)) {
@@ -959,7 +965,7 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             workAddress: workAddress,
             birthDate: birthDate,
             gender: gender,
-            tripID: workAddressStation[0].tripID,
+            // tripID: workAddressStation[0].tripID,
             specialNeeds: specialNeeds || 0,
             countryCode: countryCode[0].countryCode
         }
@@ -1121,7 +1127,7 @@ const confirmValidationRules = [
     body('nationalityID').isNumeric().withMessage('validation.countryCodeNotExists'),
     body('statusex').isNumeric().withMessage('validation.statusNotExists'),
 ];
-router.post("/confirmedit", autherized, confirmValidationRules, async (req, res) => {// test
+router.post("/confirmedit", autherized, confirmValidationRules, async (req, res) => {// completed
     try {
 
         const autherized = res.locals.autherized;

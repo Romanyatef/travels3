@@ -198,7 +198,6 @@ const creditValidationRules2 = [
     body("cnnNumber").isNumeric().withMessage("validation.cnnNotExists"),
     body("cvv").isNumeric().withMessage("validation.cvvNotExists"),
 ];
-
 router2.delete(
     "/deletecredit",
     autherized,
@@ -262,7 +261,7 @@ router2.delete(
     }
 );
 
-//==========================================  send profile by token  ==========================================//
+//==========================================  send profile by token  ==========================================//\
 
 router2.post("/send", autherized, async (req, res) => {
     //completed
@@ -313,19 +312,11 @@ router2.delete("/deleteProfile", autherized, async (req, res) => {
 });
 
 //==========================================  booking a trip  ==========================================//
-router2.post("/book", autherized, async (req, res) => {
+router2.post("/book", autherized, async (req, res) => {//completed
     //completed
     try {
-        const { id, kind } = req.query;
-        if (
-            !(
-                id &&
-                (kind == 1 || kind == 0) &&
-                Number.isInteger(day) &&
-                day >= 0 &&
-                day <= 6
-            )
-        ) {
+        const { id } = req.query;
+        if (!(id)) {
             return res.status(400).json({
                 status: false,
                 code: 400,
@@ -344,16 +335,27 @@ router2.post("/book", autherized, async (req, res) => {
                 errors: {},
             });
         }
+
+        if (tripExist[0].startHBack <= moment().tz("Africa/Cairo").hour()) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripNotValid"),
+                data: {},
+                errors: {},
+            });
+        }
+        console.log(tripExist);
         let vehicle;
         if (tripExist[0].goBack == 1) {
             vehicle = await query(
                 "select * from vehicles where id=?",
-                tripExist[0].vehicleIDBack
+                parseInt(tripExist[0].vehicleIDGo)
             );
         } else {
             vehicle = await query(
                 "select * from vehicles where id=?",
-                tripExist[0].vehicleIDGo
+                parseInt(tripExist[0].vehicleIDBack)
             );
         }
         if (vehicle[0].passengeersNum == vehicle[0].seats) {
@@ -366,80 +368,81 @@ router2.post("/book", autherized, async (req, res) => {
             });
         }
         const autherized = res.locals.autherized;
-        if (autherized.tripID == id) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.tripsNotbooked"),
-                data: {},
-                errors: {},
-            });
-        }
-        if (autherized.tripID && kind == 1) {
-            // const tripExist2 = await query("select * from trips where id=?", autherized.tripID)
-            // const vehicle2 = await query("select * from vehicles where id=?", tripExist2[0].vehicleID)
-            // await query("update vehicles set passengeersNum=?  where id =?", [vehicle2[0].passengeersNum - 1, vehicle2[0].id])
+        // if (autherized.tripID == id) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.tripsNotbooked"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
+        // if (autherized.tripID && kind == 1) {
+        //     // const tripExist2 = await query("select * from trips where id=?", autherized.tripID)
+        //     // const vehicle2 = await query("select * from vehicles where id=?", tripExist2[0].vehicleID)
+        //     // await query("update vehicles set passengeersNum=?  where id =?", [vehicle2[0].passengeersNum - 1, vehicle2[0].id])
 
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.tripsNotbooked2"),
-                data: {},
-                errors: {},
-            });
-        }
-        if (kind == 1) {
-            moment.tz.setDefault("Africa/Cairo");
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.tripsNotbooked2"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
+        // if (true) {
+        // moment.tz.setDefault("Africa/Cairo");
 
-            const currentDate = moment();
-            const endOfMonth = moment().endOf("month");
-            const duration = moment.duration(endOfMonth.diff(currentDate));
-            const numOfDays = duration.asDays();
-            const tripBook = {
-                tripID: id,
-                counter: numOfDays * 2 + 6,
-            };
+        // const currentDate = moment();
+        // const endOfMonth = moment().endOf("month");
+        // const duration = moment.duration(endOfMonth.diff(currentDate));
+        // const numOfDays = duration.asDays();
+        const tripBook = {
+            tripID: id,
+            userID: autherized.id,
+            // counter: numOfDays * 2 + 6,.add(1, 'day')
+        };
 
-            await query("update users set ?  where id =?", [tripBook, autherized.id]);
-            await query("update vehicles set passengeersNum=?  where id =?", [
-                vehicle[0].passengeersNum + 1,
-                vehicle[0].id,
-            ]);
-            return res.status(200).json({
-                status: true,
-                code: 200,
-                msg: req.t("booked"),
-                data: {},
-                errors: {},
-            });
-        }
+        await query("insert into externaltrips set ? ", [tripBook]);
+        await query("update vehicles set passengeersNum=?  where id =?", [
+            vehicle[0].passengeersNum + 1,
+            vehicle[0].id,
+        ]);
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("booked"),
+            data: {},
+            errors: {},
+        });
+        // }
 
-        if (kind == 0) {
-            // moment.tz.setDefault('Africa/Cairo');
-            // const currentDate = moment();
-            // const endOfMonth = moment().endOf('month');
-            // const duration = moment.duration(endOfMonth.diff(currentDate));
-            // const numOfDays = duration.asDays();
-            const tripBook = {
-                tripID: id,
-                userID: autherized.id,
-                day: day,
-            };
+        // if (kind == 0) {
+        //     // moment.tz.setDefault('Africa/Cairo');
+        //     // const currentDate = moment();
+        //     // const endOfMonth = moment().endOf('month');
+        //     // const duration = moment.duration(endOfMonth.diff(currentDate));
+        //     // const numOfDays = duration.asDays();
+        //     const tripBook = {
+        //         tripID: id,
+        //         userID: autherized.id,
+        //         day: day,
+        //     };
 
-            // await query("update users set ?  where id =?", [tripBook, autherized.id])
-            await query("insert into externaltrips set ?", tripBook);
-            await query("update vehicles set passengeersNum=?  where id =?", [
-                vehicle[0].passengeersNum + 1,
-                vehicle[0].id,
-            ]);
-            return res.status(200).json({
-                status: true,
-                code: 200,
-                msg: req.t("booked"),
-                data: {},
-                errors: {},
-            });
-        }
+        //     // await query("update users set ?  where id =?", [tripBook, autherized.id])
+        //     await query("insert into externaltrips set ?", tripBook);
+        //     await query("update vehicles set passengeersNum=?  where id =?", [
+        //         vehicle[0].passengeersNum + 1,
+        //         vehicle[0].id,
+        //     ]);
+        //     return res.status(200).json({
+        //         status: true,
+        //         code: 200,
+        //         msg: req.t("booked"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
     } catch (err) {
         return res.status(500).json({
             status: false,
@@ -450,8 +453,149 @@ router2.post("/book", autherized, async (req, res) => {
         });
     }
 });
-// ==========================================  generate text  ==========================================//
-router2.post("/generate", autherized, async (req, res) => {//incomplete//add trip id to generated text to use it later in the scan for which trip
+//==========================================  schedule trips  ==========================================//
+const validateDates = async (dates, id) => {
+    console.log("hello");
+
+    if (!Array.isArray(dates)) {
+        console.log("hello1#");
+        return false
+    }
+    const currentDate = new Date();
+    for (let i = 0; i < dates.length; i++) {
+        if (!(new Date(dates[i]) instanceof Date)) {
+            console.log("hello2#");
+            return false;
+        }
+    console.log(dates[1] instanceof Date);
+
+        const dateExists = await query("select * from userschedule where userID=? AND date=?", [id, new Date(dates[i])])
+        if (dateExists[0]) {
+            console.log("hello3#");
+
+            return false;
+        }
+        if (dates[i] <= currentDate) {
+            console.log("hello4#");
+            return false
+        }
+    }
+
+    return true;
+}
+
+const validateTripIds = async (tripIds) => {
+    if (!Array.isArray(tripIds)) {
+        return false
+    }
+    for (let i = 0; i < tripIds.length; i++) {
+        if (typeof tripIds[i] == 'number') {
+            const tripExists = await query("select * from trips where id=?", tripIds[i])
+            //check if there a space in the trip
+            const vichlego = await query("select * from vehicles where id=?", parseInt(tripExists[0].vehicleIDGo))
+            const vichleBack = await query("select * from vehicles where id=?", parseInt(tripExists[0].vehicleIDBack))
+            if (vichlego[0].passengeersNum + 1 > vichlego[0].seats && vichleBack[0].passengeersNum + 1 > vichleBack[0].seats) {
+                return false;
+            }
+            // if (tripExists[0].startHGo <= moment().tz("Africa/cairo").hour()) {
+            //     return false;
+            // }
+            if (!tripExists[0]) {
+                return false;
+            }
+        } else {
+            return false
+        }
+    }
+}
+
+const combineArrays = async (dateArray, tripIdArray, userID) => {
+    const combinedArray = dateArray.map((date, index) => ({
+        userID: userID,
+        tripID: tripIdArray[index],
+        date: date
+    }));
+    return combinedArray;
+}
+router2.post("/bookschedule", autherized, async (req, res) => {//test
+    //completed
+    try {
+        // const currunt
+        const { dates, tripIds } = req.body;
+        const autherized = res.locals.autherized;
+        const validTripIds = await validateTripIds(tripIds);
+        // if (!validTripIds) {
+        //     console.log("hello3");
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.invalidInputs"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
+
+        // Validate dates
+        const validDates = await validateDates(dates, autherized.id);
+        if (!validDates) {
+            console.log("hello1");
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.invalidInputs"),
+                data: {},
+                errors: {},
+            });
+        }
+        if (!dates.length == tripIds.length) {
+            console.log("hello2");
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.invalidInputs"),
+                data: {},
+                errors: {},
+            });
+        }
+
+        // if (!(((await validateTripIds(tripIds)) && (await validateDates(dates, autherized.id))) && dates.length == tripIds.length)) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.invalidInputs"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
+        const combinedArray = await combineArrays(dates, tripIds, autherized.id);
+        combinedArray.map(async (obj) => {
+            await query("insert into userschedule set ?", obj)
+        });
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("added"),
+            data: {},
+            errors: {},
+        });
+
+
+
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//==========================================  generate text  ==========================================//
+router2.post("/generate", autherized, async (req, res) => {//incomplete//add trip id in front to generated text to use it later in the scan for which trip
     try {
         const autherized = res.locals.autherized;
         const exists = await query(
@@ -549,32 +693,32 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
 
         const present = userGExist[0].present;
         if (present) {
-                await query("delete from qrcodes where userID=?", [
-                    id,
-                ]);
-                return res.status(200).json({
-                    status: true,
-                    code: 200,
-                    msg: req.t("checkedout"),
-                    data: {},
-                    errors: {},
-                });
+            await query("delete from qrcodes where userID=?", [
+                id,
+            ]);
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("checkedout"),
+                data: {},
+                errors: {},
+            });
         }
         if (!present) {
-                
-                    await query("update qrcodes set present=?  where userID=?", [
-                        1,
-                        id,
-                    ]);
 
-                    return res.status(200).json({
-                        status: true,
-                        code: 200,
-                        msg: req.t("checkedin"),
-                        data: {},
-                        errors: {},
-                    });
-                }
+            await query("update qrcodes set present=?  where userID=?", [
+                1,
+                id,
+            ]);
+
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("checkedin"),
+                data: {},
+                errors: {},
+            });
+        }
 
         return res.status(400).json({
             status: false,
@@ -598,14 +742,14 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
 const isFloat = require("./travelsOperations.js").isFloat
 const favAddress1 = (value, { req }) => {
     const { longitude } = req.body;
-    if ((!isFloat(longitude)) ||( parseFloat(longitude) < -180.0 || parseFloat(longitude) > 180.0)) {
+    if ((!isFloat(longitude)) || (parseFloat(longitude) < -180.0 || parseFloat(longitude) > 180.0)) {
         throw new Error('validation.AddressNotExist');
     }
     return true;
 };
 const favAddress2 = (value, { req }) => {
     const { latitude } = req.body;
-    if ((!isFloat(latitude)  || (parseFloat(latitude) < -85.05112878 || parseFloat(latitude) > 85.05112878 ))) {
+    if ((!isFloat(latitude) || (parseFloat(latitude) < -85.05112878 || parseFloat(latitude) > 85.05112878))) {
         throw new Error('validation.AddressNotExist');
     }
     return true;
@@ -642,7 +786,7 @@ router2.post("/fav", addAdress, autherized, async (req, res) => {//complete
             });
         }
         const autherized = res.locals.autherized;
-        const { title, longitude, latitude }=req.body
+        const { title, longitude, latitude } = req.body
         const favAddres = {
             title: title,
             userID: autherized.id,
@@ -670,8 +814,80 @@ router2.post("/fav", addAdress, autherized, async (req, res) => {//complete
         });
     }
 });
+//==========================================  get inbox data  ==========================================//
+const paginatedResults = async (page, limit, id) => {
+    const startIndex = (page - 1) * limit;
+    const user = "user";
+    const result = await query("select * from inbox where userID =? limit ? offset ?", [id, (limit + 1), startIndex])
+    console.log(result);
+    // const query2 = `select * from ${tableName} where type = ? limit ? offset ?`;
+    // const result = await query(query2, [user, (limit + 1), startIndex]);
+    const userData = {
+        result: result,
+        statusPrevious: true,
+        statusNext: true,
+        numRecords: (await query(`select count(*) as countinbox from inbox where userID =${id}`))[0].countinbox
+    }
+    if (!(result.length == limit + 1)) {
+        userData.statusNext = false
+    }
+    if (result.length == limit + 1) {
+        await userData.result.pop();
+    }
+
+    if (startIndex == 0) {
+        userData.statusPrevious = false
+    }
+
+
+
+    return userData;
+};
+router2.get("/inbox", autherized, async (req, res) => {//completed
+    try {
+        const { page, limit } = req.query;
+        if (!(Boolean(limit) && Boolean(page))) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.limitPage"),
+                data: {},
+                errors: {},
+            });
+        }
+        const autherized = res.locals.autherized;
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const inboxData = await paginatedResults(pageNumber, limitNumber, autherized.id)
+        if (inboxData.result[0]) {
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: "",
+                data: inboxData,
+                errors: {},
+            });
+        }
+        return res.status(400).json({
+            status: false,
+            code: 400,
+            msg: req.t("error.finishPresenting"),
+            data: {},
+            errors: {},
+        });
+
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 //==========================================  get fav address  ==========================================//
-router2.get("/fav", autherized, async (req, res) => {//complete
+router2.get("/fav", autherized, async (req, res) => {//completed
     try {
         const autherized = res.locals.autherized;
         const favAddresses = await query("select * from favaddress where userID =? ", autherized.id)
@@ -703,9 +919,9 @@ router2.get("/fav", autherized, async (req, res) => {//complete
     }
 });
 //==========================================  get fav address  ==========================================//
-router2.post("/promo", autherized, async (req, res) => {//incomplete
+router2.post("/promo", autherized, async (req, res) => {//incomplete//completed
     try {
-        const {promo}=req.body 
+        const { promo } = req.body
         if (!promo) {
             return res.status(400).json({
                 status: false,
@@ -716,9 +932,20 @@ router2.post("/promo", autherized, async (req, res) => {//incomplete
             });
         }
         // const autherized = res.locals.autherized;
-        const promoExist = await query("select promo from variety where id=2")[0].promo;
-        if (promoExist == promo) {
+        const promoInfo = (await query("select promo, counter  from variety where id=2"))[0]
+        const promoExist = promoInfo.promo;
+        if (parseInt(promoInfo.counter) == 0) {
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("error.promoFinished"),
+                data: {},
+                errors: {},
+            });
+        }
+        if (promoInfo.promo == promo) {
             //execute the operations of the promo code
+            await query("update variety set counter=? where id=2", (parseInt(promoInfo.counter) - 1))
             return res.status(200).json({
                 status: true,
                 code: 200,
@@ -736,6 +963,7 @@ router2.post("/promo", autherized, async (req, res) => {//incomplete
         });
 
     } catch (err) {
+        console.log(err);
         return res.status(500).json({
             status: false,
             code: 500,

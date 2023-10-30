@@ -7,7 +7,8 @@ const userAuth = require("../middleware/user.js");
 const adminAuth = require("../middleware/admin");
 const phoneNumber = require('libphonenumber-js');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
-
+const upload = require("../middleware/uploadImages.js");
+const deleteUploadedFiles=require("./adminServices.js")
 
 
 const paginatedResults = async (tableName, page, limit) => {
@@ -55,8 +56,8 @@ const validationRules = [
             return true;
         }),
 ];
+router6.post("/complaints", upload.array("images"), userAuth, validationRules, async (req, res) => {//test
 
-router6.post("/complaints", userAuth, validationRules, async (req, res) => {
     try {
         //============  Check if there are any validation errors ============
         const errors = validationResult(req);
@@ -65,6 +66,9 @@ router6.post("/complaints", userAuth, validationRules, async (req, res) => {
                 ...error,
                 msg: req.t(error.msg)
             }));
+            if (req.files) {
+                await deleteUploadedFiles(req.files)
+            }
             return res.status(400).json({
                 status: false,
                 code: 400,
@@ -78,6 +82,9 @@ router6.post("/complaints", userAuth, validationRules, async (req, res) => {
         const user = res.locals.user;
         const isValid2 = phoneNumber.isValidNumber( phone);
         if (!isValid2) {
+            if (req.files) {
+                await deleteUploadedFiles(req.files)
+            }
             return res.status(400).json({
                 status: false,
                 code: 400,
@@ -93,7 +100,16 @@ router6.post("/complaints", userAuth, validationRules, async (req, res) => {
             subject: subject,
             email:email
         }
-        await query("insert into contactus  set ?", complain);
+        const insertion= await query("insert into contactus  set ?", complain);
+        const id = insertion.insertId
+
+        await Promise.all(req.files.map(async (file) => {
+            const contactusimage = {
+                image: file.filename,
+                contactusID: id,
+            }
+            await query("insert into contactusimages set ?", contactusimage)
+        }))
         return res.status(200).json({
             status: true,
             code: 200,
@@ -116,7 +132,7 @@ const alter = async (e) => {
     e.actualuserName = user[0].userName
     e.actualphone = user[0].phone
 }
-router6.get("/solve", adminAuth, async (req, res) => {
+router6.get("/solve", adminAuth, async (req, res) => {//test
     try {
         const { page, limit } = req.query;
         if (!(Boolean(limit) && Boolean(page))) {
@@ -131,8 +147,18 @@ router6.get("/solve", adminAuth, async (req, res) => {
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const complaints = await paginatedResults("contactus", pageNumber, limitNumber)
+        const host = req.get('host');
         if (complaints.result[0]) {
-
+            await Promise.all(complaints.result.map(async (ele) => {
+                const images = await query("select * from contactusimages where contactusID =?", ele.id);
+                if (images[0]) {
+                    ele.images = images.map((ele2) => {
+                        const imageUrl = `http://${host}/upload/${ele2.image}`;
+                        delete ele2.contactusID;
+                        return { ...ele2, image: imageUrl };
+                    });
+                }
+            }));
             await Promise.all(complaints.result.map(alter));
             
             return res.status(200).json({

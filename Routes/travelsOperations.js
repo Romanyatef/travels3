@@ -568,138 +568,137 @@ router8.get("/tripsforyou", requestTripValidation, userAuth, async (req, res) =>
     }
 });
 
-//========================== get trips for you ==========================//
-router8.get("/worktrips", userAuth, async (req, res) => {//completed4*******************************************
-    try {
-        const user1 = res.locals.user;
-        const latitudeCurrent = user1.homeAddressLat
-        const longitudeCurrent = user1.homeAddressLong
-        const latitudeDestination = user1.workAddressLat
-        const longitudeDestination = user1.workAddressLong
-        // const dataCurrent = await query(` select * from stations where ${haversine.sql('latitude', 'longitude', latitudeCurrent, longitudeCurrent, 1000)}`)
-        // const dataDestination = await query(`SELECT * FROM stations WHERE ${haversine('latitude', 'longitude', latitudeDestination, longitudeDestination, { unit: 'km' })}`);        
-        // const matchingResults = dataCurrent.filter(currentRow =>
-        //     dataDestination.some(destRow => destRow.tripID == currentRow.tripID)
-        // );
-        // const distance = 1; // Distance in kilometers
+// //========================== get trips for you ==========================//
+// router8.get("/worktrips", userAuth, async (req, res) => {//completed4*******************************************
+//     try {
+//         const user1 = res.locals.user;
+//         // const latitudeCurrent = user1.homeAddressLat
+//         // const longitudeCurrent = user1.homeAddressLong
+//         const stationId = await query("select * from stations where id=?", user1.workAddress)
+//         const latitudeDestination = user1.workAddressLat
+//         const longitudeDestination = user1.workAddressLong
+//         // const dataCurrent = await query(` select * from stations where ${haversine.sql('latitude', 'longitude', latitudeCurrent, longitudeCurrent, 1000)}`)
+//         // const dataDestination = await query(`SELECT * FROM stations WHERE ${haversine('latitude', 'longitude', latitudeDestination, longitudeDestination, { unit: 'km' })}`);        
+//         // const matchingResults = dataCurrent.filter(currentRow =>
+//         //     dataDestination.some(destRow => destRow.tripID == currentRow.tripID)
+//         // );
+//         // const distance = 1; // Distance in kilometers
 
-        // const query1 = `SELECT * FROM stations WHERE ${haversine('latitude', 'longitude', latitude, longitude, { unit: 'km' })} <= ${distance}`
-        // const dataDestination = await query(query1,); 
-        // const matchingResults = dataCurrent.filter(currentRow =>
-        //     dataDestination.some(destRow => destRow.tripID == currentRow.tripID)
-        // );
+//         // const query1 = `SELECT * FROM stations WHERE ${haversine('latitude', 'longitude', latitude, longitude, { unit: 'km' })} <= ${distance}`
+//         // const dataDestination = await query(query1,); 
+//         // const matchingResults = dataCurrent.filter(currentRow =>
+//         //     dataDestination.some(destRow => destRow.tripID == currentRow.tripID)
+//         // );
 
-        const matchingResultsCurrent = []
-        const matchingResultsdistination = []
-        const stations = await query("select * from stations");
-        stations.forEach(station => {
-            const a = { lat: station.latitude, lng: station.longitude }
-            const b = { lat: latitudeCurrent, lng: longitudeCurrent }
-            const distance = haversine(a, b)
-            if (distance <= 1000) {
-                matchingResultsCurrent.push(station.tripID)
-            }
-            const c = { lat: station.latitude, lng: station.longitude }
-            const d = { lat: latitudeDestination, lng: longitudeDestination }
-            const distance2 = haversine(c, d)
-            if (distance2 <= 1000) {
+//         const matchingResultsCurrent = []
+//         // const matchingResultsdistination = []
+//         const stations = await query("select * from stations where startEnd=1");
+//         stations.forEach(station => {
+//             const a = { lat: station.latitude, lng: station.longitude }
+//             const b = { lat: latitudeCurrent, lng: longitudeCurrent }
+//             const distance = haversine(a, b)
+//             if (distance <= 1000) {
+//                 matchingResultsCurrent.push(station.tripID)
+//             }
+//             const c = { lat: station.latitude, lng: station.longitude }
+//             const d = { lat: latitudeDestination, lng: longitudeDestination }
+//             const distance2 = haversine(c, d)
+//             if (distance2 <= 1000) {
 
-                matchingResultsdistination.push(station.tripID)
-            }
+//                 matchingResultsdistination.push(station.tripID)
+//             }
 
-        })
-        const matchingResultsCurrent2 = new Set(matchingResultsCurrent);
-        const matchingResultsdistination2 = new Set(matchingResultsdistination);
-        const intersection = new Set();
+//         })
+//         // const matchingResultsCurrent2 = new Set(matchingResultsCurrent);
+//         // const matchingResultsdistination2 = new Set(matchingResultsdistination);
+//         // const intersection = new Set();
 
-        matchingResultsCurrent2.forEach(value => {
-            if (matchingResultsdistination2.has(value)) {
-                intersection.add(value);
-            }
-        });
-        const intersectionArray = Array.from(intersection);
+//         // matchingResultsCurrent2.forEach(value => {
+//         //     if (matchingResultsdistination2.has(value)) {
+//         //         intersection.add(value);
+//         //     }
+//         // });
+//         // const intersectionArray = Array.from(intersection);
 
-        const allTripsDetails = [];
-        await Promise.all(
-            intersectionArray.map(async trip => {
-                const tripDetails = await query('select * from trips where id = ?', trip);
-                const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
-                const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
-                if (drivernameGo[0]) {
-                    tripDetails[0].driveridGo = drivernameGo[0].fullName
-                } else {
-                    tripDetails[0].drivernameGo = "none"
+//         const allTripsDetails = [];
+//         await Promise.all(
+//             intersectionArray.map(async trip => {
+//                 const tripDetails = await query('select * from trips where id = ?', trip);
+//                 const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+//                 const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+//                 if (drivernameGo[0]) {
+//                     tripDetails[0].driveridGo = drivernameGo[0].fullName
+//                 } else {
+//                     tripDetails[0].drivernameGo = "none"
 
-                }
-                if (drivernameBack[0]) {                
-                    tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
-                } else {
-                    tripDetails[0].vehicleIDBack = "none"
-                }
-                const allTrip = tripDetails[0];
-                allTripsDetails.push(allTrip);
-            })
-        );
-        if (!allTripsDetails[0]) {
+//                 }
+//                 if (drivernameBack[0]) {                
+//                     tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+//                 } else {
+//                     tripDetails[0].vehicleIDBack = "none"
+//                 }
+//                 const allTrip = tripDetails[0];
+//                 allTripsDetails.push(allTrip);
+//             })
+//         );
+//         if (!allTripsDetails[0]) {
 
-            await Promise.all(
-                Array.from(matchingResultsdistination2).map(async trip => {
-                    const tripDetails = await query('select * from trips where id = ?', trip);
-                    const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
-                    const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
-                    if (drivernameGo[0]) {
-                        tripDetails[0].driveridGo = drivernameGo[0].fullName
-                    } else {
-                        tripDetails[0].drivernameGo = "none"
+//             await Promise.all(
+//                 Array.from(matchingResultsdistination2).map(async trip => {
+//                     const tripDetails = await query('select * from trips where id = ?', trip);
+//                     const drivernameGo = await query("select fullName from driver where id = ?", [tripDetails[0].driveridGo]);
+//                     const drivernameBack = await query("select fullName from driver where id = ?", [tripDetails[0].vehicleIDBack]);
+//                     if (drivernameGo[0]) {
+//                         tripDetails[0].driveridGo = drivernameGo[0].fullName
+//                     } else {
+//                         tripDetails[0].drivernameGo = "none"
 
-                    }
-                    if (drivernameBack[0]) {
-                        tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
-                    } else {
-                        tripDetails[0].vehicleIDBack = "none"
-                    }
-                    const allTrip = tripDetails[0];
-                    allTripsDetails.push(allTrip);
-                })
-            );
-            if (allTripsDetails[0]) {
-                return res.status(200).json({
-                    status: true,
-                    code: 200,
-                    msg: req.t("error.NotripsforyouButThatSuggestions"),
-                    data: allTripsDetails,
-                    errors: {},
-                });
-            }
-            return res.status(404).json({
-                status: false,
-                code: 404,
-                msg: req.t("error.Notrips"),
-                data: {},
-                errors: {},
-            });
-        }
-        return res.status(200).json({
-            status: true,
-            code: 200,
-            msg: "",
-            data: allTripsDetails,
-            errors: {},
-        });
+//                     }
+//                     if (drivernameBack[0]) {
+//                         tripDetails[0].vehicleIDBack = drivernameBack[0].fullName
+//                     } else {
+//                         tripDetails[0].vehicleIDBack = "none"
+//                     }
+//                     const allTrip = tripDetails[0];
+//                     allTripsDetails.push(allTrip);
+//                 })
+//             );
+//             if (allTripsDetails[0]) {
+//                 return res.status(200).json({
+//                     status: true,
+//                     code: 200,
+//                     msg: req.t("error.NotripsforyouButThatSuggestions"),
+//                     data: allTripsDetails,
+//                     errors: {},
+//                 });
+//             }
+//             return res.status(404).json({
+//                 status: false,
+//                 code: 404,
+//                 msg: req.t("error.Notrips"),
+//                 data: {},
+//                 errors: {},
+//             });
+//         }
+//         return res.status(200).json({
+//             status: true,
+//             code: 200,
+//             msg: "",
+//             data: allTripsDetails,
+//             errors: {},
+//         });
 
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            status: false,
-            code: 500,
-            msg: "",
-            data: {},
-            errors: { serverError: err },
-        });
-    }
-});
-
-
+//     } catch (err) {
+//         console.log(err);
+//         return res.status(500).json({
+//             status: false,
+//             code: 500,
+//             msg: "",
+//             data: {},
+//             errors: { serverError: err },
+//         });
+//     }
+// });
 //========================== get all trip stations by id ==========================//
 router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
     try {
@@ -752,8 +751,61 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
         });
     }
 });
+//========================== get  trip of station ==========================//
+router8.get("/tripofstation", userAuth, async (req, res) => {//completed
+    try {
+        const { id } = req.query;
+        if (!(id)) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.stationIDNOTExistsID"),
+                data: {},
+                errors: {},
+            });
+        }
+        const tripStations = await query("select * from stations where id=?", id);
+        if (!tripStations[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripStationsNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        const tripExist = await query("select * from trips where id=?", tripStations[0].tripID)
+        if (!tripExist[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripIDNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: tripExist,
+            errors: {},
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 //========================== get all trip end stations ==========================//
-router8.get("/allendstations", async (req, res) => {//test
+router8.get("/allendstations", userAuth,async (req, res) => {//completed
     try {
         const tripStations = await query("select * from stations where startEnd=?", 1);
         if (!tripStations[0]) {
@@ -785,7 +837,7 @@ router8.get("/allendstations", async (req, res) => {//test
     }
 });
 //========================== get  trip by end station ==========================//
-router8.get("/alltripstations", userAuth, async (req, res) => {//test
+router8.get("/alltripstations2", userAuth, async (req, res) => {//completed
     try {
         const { id } = req.query;
         if (!(id)) {
@@ -797,7 +849,51 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//test
                 errors: {},
             });
         }
-        const stationExist = await query("select * from stations where id=?", id)
+        const stationExist = await query("select * from stations where id=? AND startEnd=1", id)
+        console.log(stationExist);
+        if (!stationExist[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.stationIDNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        const trip = await query("select * from trips where id=?", stationExist[0].tripID);
+        if (!trip[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: req.t("error.tripNOTExists"),
+                data: {},
+                errors: {},
+            });
+        }
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: trip,
+            errors: {},
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//========================== get  trip of work address of the user ==========================//
+router8.get("/alltripstations3", userAuth, async (req, res) => {//completed
+    try {
+        const user1=res.locals.user
+        const stationExist = await query("select * from stations where id=?", user1.workAddress)
         if (!stationExist[0]) {
             return res.status(400).json({
                 status: false,

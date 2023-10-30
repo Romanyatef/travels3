@@ -1321,5 +1321,9 @@ router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, r
 });
 // "noPromo": "there is no fqa to delete",
 
-module.exports = router6;
+module.exports = {
+    router6: router6,
+    deleteUploadedFiles: deleteUploadedFiles,
+
+};
 

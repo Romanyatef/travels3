@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 28, 2023 at 08:14 PM
+-- Generation Time: Oct 30, 2023 at 08:06 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -31,6 +31,13 @@ CREATE TABLE `companies` (
   `id` int(11) NOT NULL,
   `companyName` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `companies`
+--
+
+INSERT INTO `companies` (`id`, `companyName`) VALUES
+(2, 'toyota');
 
 -- --------------------------------------------------------
 
@@ -62,6 +69,18 @@ INSERT INTO `contactus` (`id`, `userid`, `userName`, `phone`, `email`, `subject`
 (10, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
 (11, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
 (12, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `contactusimages`
+--
+
+CREATE TABLE `contactusimages` (
+  `id` int(11) NOT NULL,
+  `contactusID` int(11) NOT NULL,
+  `image` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -125,19 +144,6 @@ INSERT INTO `driver` (`id`, `fullName`, `mobileNumber`, `token`, `emailAddress`,
 -- --------------------------------------------------------
 
 --
--- Table structure for table `exceptiontrips`
---
-
-CREATE TABLE `exceptiontrips` (
-  `id` int(11) NOT NULL,
-  `tripId` int(11) NOT NULL,
-  `userId` int(11) NOT NULL,
-  `day` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `externaltrips`
 --
 
@@ -145,9 +151,18 @@ CREATE TABLE `externaltrips` (
   `id` int(11) NOT NULL,
   `userID` int(11) NOT NULL,
   `tripID` int(11) NOT NULL,
-  `counter` int(11) NOT NULL DEFAULT 2,
-  `day` int(11) NOT NULL
+  `counter` int(1) NOT NULL DEFAULT 1,
+  `date` date NOT NULL DEFAULT current_timestamp(),
+  `added` int(1) NOT NULL DEFAULT 0 COMMENT '1==>added\r\n0==>not added'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `externaltrips`
+--
+
+INSERT INTO `externaltrips` (`id`, `userID`, `tripID`, `counter`, `date`, `added`) VALUES
+(1, 6, 23, 2, '2023-10-29', 0),
+(2, 24, 23, 1, '2023-10-30', 0);
 
 -- --------------------------------------------------------
 
@@ -169,6 +184,29 @@ CREATE TABLE `favaddress` (
 
 INSERT INTO `favaddress` (`id`, `userID`, `title`, `longitude`, `latitude`) VALUES
 (3, 6, 'hello', 33.34434434343, 23.23999898899989);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `inbox`
+--
+
+CREATE TABLE `inbox` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `body` varchar(255) NOT NULL,
+  `kind` enum('like','dislike','info','promo','celebrate') NOT NULL,
+  `date` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `inbox`
+--
+
+INSERT INTO `inbox` (`id`, `userID`, `title`, `body`, `kind`, `date`) VALUES
+(1, 24, 'jhh', 'hbhhjjh', 'info', '2023-10-30 19:47:27'),
+(2, 24, 'jhhjh', 'hbhb', 'like', '2023-10-30 19:47:27');
 
 -- --------------------------------------------------------
 
@@ -302,7 +340,7 @@ CREATE TABLE `trips` (
   `price` int(11) NOT NULL,
   `description` varchar(255) NOT NULL,
   `goBack` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0==>go\r\n1==>back',
-  `status` int(1) NOT NULL DEFAULT 0 COMMENT '0==>inactive\r\n1==>active'
+  `status` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0==>inactive\r\n1==>active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -310,7 +348,7 @@ CREATE TABLE `trips` (
 --
 
 INSERT INTO `trips` (`id`, `name`, `vehicleIDGo`, `vehicleIDBack`, `driveridGo`, `driveridBack`, `startHGo`, `endHGo`, `startHBack`, `endHBack`, `price`, `description`, `goBack`, `status`) VALUES
-(23, 'lmklbmbvvmvmmvvvm', NULL, NULL, 4, 4, '04:05:09', '07:05:09', '07:15:09', '10:15:09', 10, 'this trip is a trip going from 6 october to Mostorod ', 1, 0);
+(23, 'lmklbmbvvmvmmvvvm', 6, 6, 4, 4, '04:05:09', '07:05:09', '19:15:09', '23:15:09', 10, 'this trip is a trip going from 6 october to Mostorod ', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -326,7 +364,7 @@ CREATE TABLE `users` (
   `specialNeeds` tinyint(1) NOT NULL COMMENT '0==>yes\r\n1==>no',
   `birthDate` date NOT NULL,
   `countryCode` varchar(4) NOT NULL,
-  `homeAddress` int(11) DEFAULT NULL,
+  `homeAddress` varchar(255) DEFAULT NULL,
   `workAddress` int(11) DEFAULT NULL,
   `profile_image` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
@@ -344,12 +382,36 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`, `birthDate`, `countryCode`, `homeAddress`, `workAddress`, `profile_image`, `phone`, `type`, `counter`, `token`, `deviceToken`, `email`, `password`, `status`) VALUES
-(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 152, 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
-(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
-(25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593395318-874280431.jpg', '01223958292', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
-(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1696593688323-46490645.jpg', '01280151607', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
-(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 152, 152, '1698438896142-592115090.jpg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
-(33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 134, 152, '1698515946749-558071512.jpg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1);
+(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '152', 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
+(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
+(25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593395318-874280431.jpg', '01223958292', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
+(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593688323-46490645.jpg', '01280151607', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
+(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1698438896142-592115090.jpg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
+(33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '134', 152, '1698515946749-558071512.jpg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1),
+(34, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '137', 152, '1698519296014-731959160.jpg', '01280151678', 'user', 0, '5569463f742183f7a1f9453f239f38de', 'ijnn;ijiojijioji', 'romany195@gmail.com', '$2b$10$bv3WAgqsV2flbbNfy5ASFuIReAmFtQgQE1uMqglIsCQCWttccMVeG', 1),
+(35, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 'home2', 152, '1698685672314-437879313.jpg', '01280151888', 'user', 0, 'fc65965fbf9afd3d2609b8e2cd4ae685', NULL, 'romany199@gmail.com', '$2b$10$Fm.IsYBmKrr4sMt.k8tra.rJ6vqMI1rAwQCxOCvxWMSj/xP7IL/1C', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `userschedule`
+--
+
+CREATE TABLE `userschedule` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `tripID` int(11) NOT NULL,
+  `date` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `userschedule`
+--
+
+INSERT INTO `userschedule` (`id`, `userID`, `tripID`, `date`) VALUES
+(2, 24, 23, '2023-12-12'),
+(3, 24, 23, '2023-12-12'),
+(4, 24, 23, '2023-12-12');
 
 -- --------------------------------------------------------
 
@@ -362,6 +424,7 @@ CREATE TABLE `variety` (
   `conditions` varchar(255) DEFAULT NULL,
   `fqa` varchar(255) DEFAULT NULL,
   `promo` varchar(255) DEFAULT NULL,
+  `counter` int(11) NOT NULL DEFAULT 30,
   `tLink` varchar(255) DEFAULT NULL,
   `wLink` varchar(255) NOT NULL,
   `fLink` varchar(255) NOT NULL,
@@ -371,15 +434,16 @@ CREATE TABLE `variety` (
   `dayEnd` int(1) NOT NULL,
   `hourStart` time NOT NULL,
   `hourEnd` time NOT NULL,
-  `phone` varchar(255) NOT NULL
+  `phone` varchar(255) NOT NULL,
+  `time` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `variety`
 --
 
-INSERT INTO `variety` (`id`, `conditions`, `fqa`, `promo`, `tLink`, `wLink`, `fLink`, `lLink`, `adressLink`, `dayStart`, `dayEnd`, `hourStart`, `hourEnd`, `phone`) VALUES
-(2, NULL, 'gvhvhgvhvkh', 'pjiojiojiojkk', 'https://www.twitter.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.whatsapp.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.facebook.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.linkedin.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.google.com/maps/place/30%C2%B011\'53.1%22N+31%C2%B020\'36.6%22E/@30.1980826,31.3409371,17z/data=!3m1!4b1!4m14!1m9!4m8!1m3!2m2!1d31.34437!2d30.1922916!1m3!2m2!1d31.2935583!2d30.2338276!3m3!8m2!3d30.198078!4d31.343512?entry=ttu', 1, 6, '10:50:12', '21:12:12', '01223958299');
+INSERT INTO `variety` (`id`, `conditions`, `fqa`, `promo`, `counter`, `tLink`, `wLink`, `fLink`, `lLink`, `adressLink`, `dayStart`, `dayEnd`, `hourStart`, `hourEnd`, `phone`, `time`) VALUES
+(2, NULL, 'gvhvhgvhvkh', 'pjiojiojiojkk', 29, 'https://www.twitter.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.whatsapp.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.facebook.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.linkedin.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.google.com/maps/place/30%C2%B011\'53.1%22N+31%C2%B020\'36.6%22E/@30.1980826,31.3409371,17z/data=!3m1!4b1!4m14!1m9!4m8!1m3!2m2!1d31.34437!2d30.1922916!1m3!2m2!1d31.2935583!2d30.2338276!3m3!8m2!3d30.198078!4d31.343512?entry=ttu', 1, 6, '10:50:12', '21:12:12', '01223958299', 5);
 
 -- --------------------------------------------------------
 
@@ -402,6 +466,13 @@ CREATE TABLE `vehicles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
+-- Dumping data for table `vehicles`
+--
+
+INSERT INTO `vehicles` (`id`, `model`, `vehicleNum`, `seats`, `passengeersNum`, `vehiclecolorAR`, `vehiclecolorEN`, `companyID`, `time`, `locationlong`, `locationlat`) VALUES
+(6, 'toyota', 22323, 20, 1, 'اسود', 'black', 2, '00:00:00', 2323.2323, 2323.2323);
+
+--
 -- Indexes for dumped tables
 --
 
@@ -419,6 +490,13 @@ ALTER TABLE `contactus`
   ADD KEY `userid` (`userid`);
 
 --
+-- Indexes for table `contactusimages`
+--
+ALTER TABLE `contactusimages`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `contactusID` (`contactusID`);
+
+--
 -- Indexes for table `creditcard`
 --
 ALTER TABLE `creditcard`
@@ -432,14 +510,6 @@ ALTER TABLE `driver`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `exceptiontrips`
---
-ALTER TABLE `exceptiontrips`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `tripId` (`tripId`),
-  ADD KEY `userId` (`userId`);
-
---
 -- Indexes for table `externaltrips`
 --
 ALTER TABLE `externaltrips`
@@ -451,6 +521,13 @@ ALTER TABLE `externaltrips`
 -- Indexes for table `favaddress`
 --
 ALTER TABLE `favaddress`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userID` (`userID`);
+
+--
+-- Indexes for table `inbox`
+--
+ALTER TABLE `inbox`
   ADD PRIMARY KEY (`id`),
   ADD KEY `userID` (`userID`);
 
@@ -507,6 +584,14 @@ ALTER TABLE `users`
   ADD KEY `workAddress` (`workAddress`);
 
 --
+-- Indexes for table `userschedule`
+--
+ALTER TABLE `userschedule`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userID` (`userID`),
+  ADD KEY `tripID` (`tripID`);
+
+--
 -- Indexes for table `variety`
 --
 ALTER TABLE `variety`
@@ -527,13 +612,19 @@ ALTER TABLE `vehicles`
 -- AUTO_INCREMENT for table `companies`
 --
 ALTER TABLE `companies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `contactus`
 --
 ALTER TABLE `contactus`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT for table `contactusimages`
+--
+ALTER TABLE `contactusimages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `creditcard`
@@ -548,22 +639,22 @@ ALTER TABLE `driver`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `exceptiontrips`
---
-ALTER TABLE `exceptiontrips`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `externaltrips`
 --
 ALTER TABLE `externaltrips`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `favaddress`
 --
 ALTER TABLE `favaddress`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `inbox`
+--
+ALTER TABLE `inbox`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `maintenance`
@@ -581,7 +672,7 @@ ALTER TABLE `nationalities`
 -- AUTO_INCREMENT for table `otpstoring`
 --
 ALTER TABLE `otpstoring`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `qrcodes`
@@ -605,7 +696,13 @@ ALTER TABLE `trips`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+
+--
+-- AUTO_INCREMENT for table `userschedule`
+--
+ALTER TABLE `userschedule`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `variety`
@@ -617,7 +714,7 @@ ALTER TABLE `variety`
 -- AUTO_INCREMENT for table `vehicles`
 --
 ALTER TABLE `vehicles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
@@ -630,17 +727,16 @@ ALTER TABLE `contactus`
   ADD CONSTRAINT `contactus_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `contactusimages`
+--
+ALTER TABLE `contactusimages`
+  ADD CONSTRAINT `contactusimages_ibfk_1` FOREIGN KEY (`contactusID`) REFERENCES `contactus` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `creditcard`
 --
 ALTER TABLE `creditcard`
   ADD CONSTRAINT `creditcard_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `exceptiontrips`
---
-ALTER TABLE `exceptiontrips`
-  ADD CONSTRAINT `exceptiontrips_ibfk_1` FOREIGN KEY (`tripId`) REFERENCES `trips` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `exceptiontrips_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `externaltrips`
@@ -654,6 +750,12 @@ ALTER TABLE `externaltrips`
 --
 ALTER TABLE `favaddress`
   ADD CONSTRAINT `favaddress_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `inbox`
+--
+ALTER TABLE `inbox`
+  ADD CONSTRAINT `inbox_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `maintenance`
@@ -687,8 +789,14 @@ ALTER TABLE `trips`
 --
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`nationalityID`) REFERENCES `nationalities` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `users_ibfk_3` FOREIGN KEY (`homeAddress`) REFERENCES `stations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `users_ibfk_4` FOREIGN KEY (`workAddress`) REFERENCES `stations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `userschedule`
+--
+ALTER TABLE `userschedule`
+  ADD CONSTRAINT `userschedule_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `userschedule_ibfk_2` FOREIGN KEY (`tripID`) REFERENCES `trips` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `vehicles`

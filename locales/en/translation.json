@@ -22,8 +22,14 @@
   "send": "we send it sussessfully",
   "checkedout": "checked out of the trip",
   "checkedin": "checked in the trip",
+  "busarrive5": "There are 5 minutes left and the car will arrive.",
+  "info": "Important information",
 
   "error": {
+    "promoFinished": "the promo code has finished",
+    "finishPresenting": "we finished presenting",
+    "tripNotValid": "The trip ended for today",
+    "invalidInputs": "please enter your schedule again",
     "notsend": "We were unable to send it successfully",
     "companiesNotExists": "companies do not exist please add first",
     "companyNotExists": "company does  not exist",
