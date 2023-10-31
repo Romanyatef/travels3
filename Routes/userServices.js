@@ -35,10 +35,10 @@ router2.post("/pass", userAuth, passValidationRules, async (req, res) => {
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
-                    ...translatedErrors,
+                    general: translatedErrors,
                 },
             });
         }
@@ -136,7 +136,6 @@ router2.post("/credit", userAuth, creditValidationRules, async (req, res) => {
         const { exprity, cvv, cnnNumber, name, type } = req.body;
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
             const translatedErrors = errors.array().map((error) => ({
                 ...error,
                 msg: req.t(error.msg),
@@ -144,9 +143,10 @@ router2.post("/credit", userAuth, creditValidationRules, async (req, res) => {
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
-                    general: { ...translatedErrors },
+                    general: translatedErrors,
                 },
             });
         }
@@ -216,9 +216,9 @@ router2.delete(
                     status: false,
                     code: 400,
                     data: {},
-
+                    msg: "",
                     errors: {
-                        general: { ...translatedErrors },
+                        general:translatedErrors,
                     },
                 });
             }
@@ -455,28 +455,26 @@ router2.post("/book", autherized, async (req, res) => {//completed
 });
 //==========================================  schedule trips  ==========================================//
 const validateDates = async (dates, id) => {
-    console.log("hello");
+    // console.log("hello");
 
     if (!Array.isArray(dates)) {
-        console.log("hello1#");
         return false
     }
     const currentDate = new Date();
     for (let i = 0; i < dates.length; i++) {
         if (!(new Date(dates[i]) instanceof Date)) {
-            console.log("hello2#");
             return false;
         }
     console.log(dates[1] instanceof Date);
 
         const dateExists = await query("select * from userschedule where userID=? AND date=?", [id, new Date(dates[i])])
         if (dateExists[0]) {
-            console.log("hello3#");
+            // console.log("hello3#");
 
             return false;
         }
-        if (dates[i] <= currentDate) {
-            console.log("hello4#");
+        if (new Date(dates[i]) <= currentDate) {
+            // console.log("hello4#");
             return false
         }
     }
@@ -517,7 +515,7 @@ const combineArrays = async (dateArray, tripIdArray, userID) => {
     }));
     return combinedArray;
 }
-router2.post("/bookschedule", autherized, async (req, res) => {//test
+router2.post("/bookschedule", autherized, async (req, res) => {//complete
     //completed
     try {
         // const currunt
@@ -669,9 +667,10 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
-                    general: { ...translatedErrors },
+                    general:translatedErrors,
                 },
             });
         }
@@ -778,10 +777,10 @@ router2.post("/fav", addAdress, autherized, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
-                    general: { ...translatedErrors },
+                    general: translatedErrors,
                 },
             });
         }

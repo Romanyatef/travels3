@@ -49,6 +49,7 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors
@@ -200,6 +201,7 @@ router3.put("/alter", adminAuth, nationalityUpdateValidationRules, async (req, r
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg:"",
                 data: {},
                 errors: {
                     general: translatedErrors

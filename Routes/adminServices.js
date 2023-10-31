@@ -1324,6 +1324,7 @@ router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, r
 module.exports = {
     router6: router6,
     deleteUploadedFiles: deleteUploadedFiles,
+    deleteFileIfExists: deleteFileIfExists
 
 };
 

@@ -87,6 +87,46 @@ async function readExcelFile(filePath) {
         return false;
     }
 }
+async function validateData(data) {
+    try {
+    const requiredKeys = ["DirectionsDetails", "GPSCoordinates", "Address", "ArrivalTimeBack", "ArrivalTimeGo","BusStop"];
+
+    for (let i = 0; i < data.length; i++) {
+        const row = data[i];
+
+        const isRowFilled = requiredKeys.every((key) => {
+            const value = row[key] || '';
+            const trimmedValue = String(value).trim();
+            return trimmedValue !== '';
+        });
+
+        if (!isRowFilled) {
+            console.log(`Row ${i + 1} is incomplete. Skipping...`);
+            return false;
+        }
+
+        const gpsCoordinates = row['GPSCoordinates'];
+        const [longitude, latitude] = gpsCoordinates.split(',');
+
+        if (!validateCoordinates(longitude, latitude)) {
+            return false;
+        }
+
+        const timeGo = row['Arrival Time Go'];
+        const timeBack = row['ArrivalTimeBack'];
+
+        if (!(isDate(timeGo) || isDate(timeBack))) {
+            return false;
+        }
+    }
+
+    return true;
+    } catch (err) {
+        console.log(err);
+        return false
+}
+    
+}
 
 
 const travelvalidation = [
@@ -135,7 +175,7 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 msg: req.t(error.msg)
             }));
             if (!req.body.stationsArray) {
-                    fs.unlinkSync("./upload/" + req.file.filename); //delete image
+                    fs.unlinkSync("./upload/" + req.file.filename); //delete file
                 }
             return res.status(400).json({
                 status: false,
@@ -152,7 +192,18 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             stations = await readExcelFile("./upload/" + req.file.filename)
             fs.unlinkSync("./upload/" + req.file.filename); //delete image
         } else {
+            const isValid44 = await validateData(req.body.stationsArray)
+            if (isValid44) {
             stations = req.body.stationsArray
+            } else {
+                return res.status(400).json({
+                    status: false,
+                    code: 400,
+                    msg: req.t("error.dataError"),
+                    data: {},
+                    errors: {}
+                })
+            }
         }
         // return res.status(200).json({
         //     data: stations.sort((a, b) => a.ID - b.ID)

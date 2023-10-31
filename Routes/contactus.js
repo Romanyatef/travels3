@@ -8,8 +8,37 @@ const adminAuth = require("../middleware/admin");
 const phoneNumber = require('libphonenumber-js');
 const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
 const upload = require("../middleware/uploadImages.js");
-const deleteUploadedFiles=require("./adminServices.js")
+const fs = require("fs");
 
+// const deleteUploadedFiles=require("./adminServices.js")
+async function deleteUploadedFiles(files) {
+    // console.log('files:', files);
+
+    const deletePromises = Object.keys(files).flatMap(field => {  
+        const filesArray = Array.isArray(files[field]) ? files[field] : [files[field]];
+        // console.log('filesArray:', filesArray);
+
+        return filesArray.map(file => deleteFileIfExists(file.path));
+    });
+
+    await Promise.all(deletePromises);
+}
+// async function deleteUploadedFiles(files) {
+//     console.log('files:', files);
+
+//     const deletePromises = files.map(file => deleteFileIfExists(file.path));
+
+//     await Promise.all(deletePromises);
+// }
+async function deleteFileIfExists(filePath) {
+    try {
+        await fs.promises.access(filePath, fs.constants.F_OK);
+        await fs.promises.unlink(filePath);
+    } catch (err) {
+        console.log(err);
+        console.log(`Failed to delete file: ${filePath}`);
+    }
+}
 
 const paginatedResults = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
@@ -56,7 +85,8 @@ const validationRules = [
             return true;
         }),
 ];
-router6.post("/complaints", upload.array("images"), userAuth, validationRules, async (req, res) => {//test
+// 
+router6.post("/complaints",upload.array("images"),validationRules, userAuth , async (req, res) => {//test
 
     try {
         //============  Check if there are any validation errors ============
@@ -72,6 +102,7 @@ router6.post("/complaints", upload.array("images"), userAuth, validationRules, a
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors 
@@ -102,14 +133,16 @@ router6.post("/complaints", upload.array("images"), userAuth, validationRules, a
         }
         const insertion= await query("insert into contactus  set ?", complain);
         const id = insertion.insertId
-
-        await Promise.all(req.files.map(async (file) => {
+        if (req.files) {
+            await Promise.all(req.files.map(async (file) => {
             const contactusimage = {
                 image: file.filename,
                 contactusID: id,
             }
             await query("insert into contactusimages set ?", contactusimage)
         }))
+        }
+        
         return res.status(200).json({
             status: true,
             code: 200,
@@ -117,7 +150,12 @@ router6.post("/complaints", upload.array("images"), userAuth, validationRules, a
             data: {},
             errors: {},
         });
+
     } catch (err) {
+        if (req.files) {
+            await deleteUploadedFiles(req.files)
+        }
+        console.log(err);
         return res.status(500).json({
             status: false,
             code: 500,

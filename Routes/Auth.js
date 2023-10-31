@@ -132,8 +132,8 @@ router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) =
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
                     general: translatedErrors
                 },
@@ -257,8 +257,8 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
                     general: translatedErrors
                 },
@@ -507,6 +507,7 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors 
@@ -574,8 +575,8 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
                     general: translatedErrors 
                 },
@@ -585,6 +586,7 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
 
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
         const user = await query("select * from users where phone=?", phone);
+        
         if (user[0]) {
             const generatedOTP = await generateOTP();
             value5 = await checkExists(user[0].phone);
@@ -664,8 +666,8 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
                     general: translatedErrors 
                 },
@@ -748,6 +750,7 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors 
@@ -853,6 +856,7 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors 
@@ -1149,8 +1153,8 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
-
                 errors: {
                     general: translatedErrors 
                 },

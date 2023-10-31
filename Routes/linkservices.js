@@ -128,6 +128,7 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     general: translatedErrors
