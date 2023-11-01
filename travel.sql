@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 30, 2023 at 08:06 PM
+-- Generation Time: Nov 01, 2023 at 02:23 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -68,7 +68,9 @@ INSERT INTO `contactus` (`id`, `userid`, `userName`, `phone`, `email`, `subject`
 (9, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
 (10, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
 (11, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
-(12, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ');
+(12, 6, 'روماني عاطف عطيه', '+201223958299', 'romany@gmail.com', 'تىشيهخىخرىخىصصهثخىخصثرىخصثىخصثاخ'),
+(20, 6, 'روماني عاطف عطيه', '+201223958299', 'roma@gmail.com', 'تىشيهخىخر'),
+(21, 6, 'روماني عاطف عطيه', '+201223958299', 'roma@gmail.com', 'تىشيهخىخر');
 
 -- --------------------------------------------------------
 
@@ -81,6 +83,22 @@ CREATE TABLE `contactusimages` (
   `contactusID` int(11) NOT NULL,
   `image` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `contactusimages`
+--
+
+INSERT INTO `contactusimages` (`id`, `contactusID`, `image`) VALUES
+(10, 20, '1698764037270-643909846.jpg'),
+(11, 20, '1698764037271-959862104.jpg'),
+(12, 20, '1698764037272-308850779.jpg'),
+(13, 20, '1698764037273-342569462.jpg'),
+(14, 20, '1698764037273-830159878.jpg'),
+(15, 21, '1698786010095-143938861.jpg'),
+(16, 21, '1698786010098-647868869.jpg'),
+(17, 21, '1698786010100-724685338.jpg'),
+(18, 21, '1698786010101-248335021.jpg'),
+(19, 21, '1698786010101-665199896.jpg');
 
 -- --------------------------------------------------------
 
@@ -103,7 +121,7 @@ CREATE TABLE `creditcard` (
 --
 
 INSERT INTO `creditcard` (`id`, `name`, `cnnNumber`, `cvv`, `type`, `userID`, `exprity`) VALUES
-(8, 'visa', 298829, 242235, '', 6, '2000-03-20');
+(9, 'visa', 298825, 242235, 'visa', 6, '2000-03-20');
 
 -- --------------------------------------------------------
 
@@ -183,7 +201,8 @@ CREATE TABLE `favaddress` (
 --
 
 INSERT INTO `favaddress` (`id`, `userID`, `title`, `longitude`, `latitude`) VALUES
-(3, 6, 'hello', 33.34434434343, 23.23999898899989);
+(3, 6, 'hello', 33.34434434343, 23.23999898899989),
+(4, 6, 'hello', 33.34434434343, 23.23999898899989);
 
 -- --------------------------------------------------------
 
@@ -254,6 +273,36 @@ CREATE TABLE `otpstoring` (
   `masterkey` varchar(255) NOT NULL,
   `value` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `otpstoring`
+--
+
+INSERT INTO `otpstoring` (`id`, `masterkey`, `value`) VALUES
+(41, '01223958292', '367850');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `privatetrip`
+--
+
+CREATE TABLE `privatetrip` (
+  `id` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `pickup` varchar(255) NOT NULL,
+  `dropoff` varchar(255) NOT NULL,
+  `seats` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `time` time NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `privatetrip`
+--
+
+INSERT INTO `privatetrip` (`id`, `userID`, `pickup`, `dropoff`, `seats`, `date`, `time`) VALUES
+(1, 6, 'xsn;klm;klsm;x', 'gereerge', 4, '2023-12-12', '12:12:32');
 
 -- --------------------------------------------------------
 
@@ -366,7 +415,7 @@ CREATE TABLE `users` (
   `countryCode` varchar(4) NOT NULL,
   `homeAddress` varchar(255) DEFAULT NULL,
   `workAddress` int(11) DEFAULT NULL,
-  `profile_image` varchar(255) NOT NULL,
+  `profile_image` varchar(255) NOT NULL DEFAULT '1698773559374-37408851.jpeg',
   `phone` varchar(255) NOT NULL,
   `type` enum('admin','user','bus','') NOT NULL,
   `counter` int(11) NOT NULL DEFAULT 0 COMMENT 'every user has 2 travels to the trip in the day as average',
@@ -382,14 +431,13 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`, `birthDate`, `countryCode`, `homeAddress`, `workAddress`, `profile_image`, `phone`, `type`, `counter`, `token`, `deviceToken`, `email`, `password`, `status`) VALUES
-(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '152', 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$XdslFSnLpFq47TK8MK.R/.OLof2PEGArDxl5q6I2SHrMo1GFOcpAu', 1),
-(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$Terepjs0ZMNB3uYKTmTYyuk3L3vGKm33in5X5wOdt30yoBHv4d4se', 1),
+(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '152', 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$72e32/9XKqzue/8oZzuXaurDhqoWyfY2l0cdsKj/iDtjqtS5vlJjK', 1),
+(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$m8qVIEp0dC9SoOFBC5JDjOvyMAkvV1it8TgpO.bjqaaLHg6HNv1pq', 1),
 (25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593395318-874280431.jpg', '01223958292', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
 (26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593688323-46490645.jpg', '01280151607', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
 (31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1698438896142-592115090.jpg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
 (33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '134', 152, '1698515946749-558071512.jpg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1),
-(34, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '137', 152, '1698519296014-731959160.jpg', '01280151678', 'user', 0, '5569463f742183f7a1f9453f239f38de', 'ijnn;ijiojijioji', 'romany195@gmail.com', '$2b$10$bv3WAgqsV2flbbNfy5ASFuIReAmFtQgQE1uMqglIsCQCWttccMVeG', 1),
-(35, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 'home2', 152, '1698685672314-437879313.jpg', '01280151888', 'user', 0, 'fc65965fbf9afd3d2609b8e2cd4ae685', NULL, 'romany199@gmail.com', '$2b$10$Fm.IsYBmKrr4sMt.k8tra.rJ6vqMI1rAwQCxOCvxWMSj/xP7IL/1C', 1);
+(34, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '137', 152, '1698519296014-731959160.jpg', '01280151678', 'user', 0, '5569463f742183f7a1f9453f239f38de', 'ijnn;ijiojijioji', 'romany195@gmail.com', '$2b$10$bv3WAgqsV2flbbNfy5ASFuIReAmFtQgQE1uMqglIsCQCWttccMVeG', 1);
 
 -- --------------------------------------------------------
 
@@ -409,9 +457,11 @@ CREATE TABLE `userschedule` (
 --
 
 INSERT INTO `userschedule` (`id`, `userID`, `tripID`, `date`) VALUES
-(2, 24, 23, '2023-12-12'),
-(3, 24, 23, '2023-12-12'),
-(4, 24, 23, '2023-12-12');
+(12, 24, 23, '2023-12-13'),
+(13, 24, 23, '2023-12-14'),
+(14, 24, 23, '2023-12-15'),
+(15, 24, 23, '2023-12-16'),
+(16, 24, 23, '2023-12-17');
 
 -- --------------------------------------------------------
 
@@ -443,7 +493,7 @@ CREATE TABLE `variety` (
 --
 
 INSERT INTO `variety` (`id`, `conditions`, `fqa`, `promo`, `counter`, `tLink`, `wLink`, `fLink`, `lLink`, `adressLink`, `dayStart`, `dayEnd`, `hourStart`, `hourEnd`, `phone`, `time`) VALUES
-(2, NULL, 'gvhvhgvhvkh', 'pjiojiojiojkk', 29, 'https://www.twitter.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.whatsapp.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.facebook.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.linkedin.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.google.com/maps/place/30%C2%B011\'53.1%22N+31%C2%B020\'36.6%22E/@30.1980826,31.3409371,17z/data=!3m1!4b1!4m14!1m9!4m8!1m3!2m2!1d31.34437!2d30.1922916!1m3!2m2!1d31.2935583!2d30.2338276!3m3!8m2!3d30.198078!4d31.343512?entry=ttu', 1, 6, '10:50:12', '21:12:12', '01223958299', 5);
+(2, NULL, 'gvhvhgvhvkh', 'pjiojiojiojkk', 28, 'https://www.twitter.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.whatsapp.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.facebook.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.linkedin.com/watch?v=0YvtjygNFFI&list=PLBAapNDSrNi0OOB_uCQxbDykJzA9JWJAe&index=7', 'https://www.google.com/maps/place/30%C2%B011\'53.1%22N+31%C2%B020\'36.6%22E/@30.1980826,31.3409371,17z/data=!3m1!4b1!4m14!1m9!4m8!1m3!2m2!1d31.34437!2d30.1922916!1m3!2m2!1d31.2935583!2d30.2338276!3m3!8m2!3d30.198078!4d31.343512?entry=ttu', 1, 6, '10:50:12', '21:12:12', '01223958299', 5);
 
 -- --------------------------------------------------------
 
@@ -551,6 +601,13 @@ ALTER TABLE `otpstoring`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `privatetrip`
+--
+ALTER TABLE `privatetrip`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userID` (`userID`);
+
+--
 -- Indexes for table `qrcodes`
 --
 ALTER TABLE `qrcodes`
@@ -618,19 +675,19 @@ ALTER TABLE `companies`
 -- AUTO_INCREMENT for table `contactus`
 --
 ALTER TABLE `contactus`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `contactusimages`
 --
 ALTER TABLE `contactusimages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `creditcard`
 --
 ALTER TABLE `creditcard`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `driver`
@@ -648,7 +705,7 @@ ALTER TABLE `externaltrips`
 -- AUTO_INCREMENT for table `favaddress`
 --
 ALTER TABLE `favaddress`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `inbox`
@@ -672,7 +729,13 @@ ALTER TABLE `nationalities`
 -- AUTO_INCREMENT for table `otpstoring`
 --
 ALTER TABLE `otpstoring`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+
+--
+-- AUTO_INCREMENT for table `privatetrip`
+--
+ALTER TABLE `privatetrip`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `qrcodes`
@@ -702,7 +765,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `userschedule`
 --
 ALTER TABLE `userschedule`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `variety`
@@ -762,6 +825,12 @@ ALTER TABLE `inbox`
 --
 ALTER TABLE `maintenance`
   ADD CONSTRAINT `maintenance_ibfk_1` FOREIGN KEY (`vehicleID`) REFERENCES `vehicles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `privatetrip`
+--
+ALTER TABLE `privatetrip`
+  ADD CONSTRAINT `privatetrip_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `qrcodes`

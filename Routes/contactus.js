@@ -92,21 +92,21 @@ router6.post("/complaints",upload.array("images"),validationRules, userAuth , as
         //============  Check if there are any validation errors ============
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
-            }));
             if (req.files) {
                 await deleteUploadedFiles(req.files)
             }
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
+            }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { countryCode, phone,email, userName, subject } = req.body
@@ -119,9 +119,9 @@ router6.post("/complaints",upload.array("images"),validationRules, userAuth , as
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.phoneNotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { phoneNotExists :req.t("validation.phoneNotExists")},
             });
         }
         const complain = {
@@ -177,9 +177,9 @@ router6.get("/solve", adminAuth, async (req, res) => {//test
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { limitPage :req.t("error.limitPage")},
             });
         }
         const pageNumber = parseInt(page);

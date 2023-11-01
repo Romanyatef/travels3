@@ -160,31 +160,30 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.excelNotExists"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { excelNotExists :req.t("error.excelNotExists")}
             })
         }
         }
         
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
-            }));
             if (!req.body.stationsArray) {
                     fs.unlinkSync("./upload/" + req.file.filename); //delete file
                 }
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
+            }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
-                data: {},
                 msg: "",
-                errors: {
-                    general: translatedErrors
-                },
+                data: {},
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         let stations = [];
@@ -199,9 +198,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.dataError"),
+                    msg:"" ,
                     data: {},
-                    errors: {}
+                    errors: { dataError :req.t("error.dataError")}
                 })
             }
         }
@@ -212,9 +211,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.excelError"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { excelError :req.t("error.excelError")}
             })
         }
         const { name, driveridGo, driveridBack, description, vehicleIDGo, vehicleIDBack, price } = req.body
@@ -223,9 +222,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noDriver"),
+                msg:"",
                 data: {},
-                errors: {},
+                errors: { noDriver :req.t("error.noDriver")},
             })
         }
         const vehicleExists = [await query("select * from vehicles where id=?", [vehicleIDGo]), await query("select * from vehicles where id=?", [vehicleIDBack])]
@@ -233,9 +232,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.vehicleNotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { vehicleNotExists :req.t("validation.vehicleNotExists")},
             })
         }
         // console.log(moment(new Date(new Date().setHours(..."10:10:10".split(':')) )).tz('Africa/Cairo').format("HH:mm:ss"));
@@ -286,9 +285,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.vehicleNotvalidTime"),
+                    msg:"",
                     data: selectedTrips,
-                    errors: {},
+                    errors: { vehicleNotvalidTime: req.t("error.vehicleNotvalidTime")},
                 })
             }
         }
@@ -312,9 +311,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.driverNotvalidTime" + " :" + driveridGo),
+                    msg:"",
                     data: driverTripsGo,
-                    errors: {},
+                    errors: { driverNotvalidTime : req.t("error.driverNotvalidTime" + " :" + driveridGo)},
                 })
             }
         }
@@ -334,9 +333,9 @@ router8.post("/createtravel", upload.single('excelFile'), travelvalidation, asyn
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.driverNotvalidTime" + " :" + driveridBack),
+                    msg:"" ,
                     data: driveridBack,
-                    errors: {},
+                    errors: { driverNotvalidTime :req.t("error.driverNotvalidTime" + " :" + driveridBack)},
                 })
             }
 
@@ -480,19 +479,18 @@ router8.get("/tripsforyou", requestTripValidation, userAuth, async (req, res) =>
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -758,9 +756,9 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripIDNOTExistsID :req.t("error.tripIDNOTExistsID")},
             });
         }
         const tripExist = await query("select * from trips where id=?", id)
@@ -768,9 +766,9 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripIDNOTExists:req.t("error.tripIDNOTExists") },
             });
         }
         const tripStations = await query("select * from stations where tripID=?", id);
@@ -778,9 +776,9 @@ router8.get("/alltripstations", userAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripStationsNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripStationsNOTExists :req.t("error.tripStationsNOTExists")},
             });
         }
         return res.status(200).json({
@@ -810,9 +808,9 @@ router8.get("/tripofstation", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.stationIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { stationIDNOTExistsID :req.t("error.stationIDNOTExistsID")},
             });
         }
         const tripStations = await query("select * from stations where id=?", id);
@@ -820,9 +818,9 @@ router8.get("/tripofstation", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripStationsNOTExists"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { tripStationsNOTExists :req.t("error.tripStationsNOTExists")},
             });
         }
         const tripExist = await query("select * from trips where id=?", tripStations[0].tripID)
@@ -830,9 +828,9 @@ router8.get("/tripofstation", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripIDNOTExists :req.t("error.tripIDNOTExists")},
             });
         }
         
@@ -863,9 +861,9 @@ router8.get("/allendstations", userAuth,async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripEndStationsNOTExists"),
+                msg:"",
                 data: {},
-                errors: {},
+                errors: { tripEndStationsNOTExists :req.t("error.tripEndStationsNOTExists")},
             });
         }
         return res.status(200).json({
@@ -895,9 +893,9 @@ router8.get("/alltripstations2", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.stationIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { stationIDNOTExistsID :req.t("error.stationIDNOTExistsID")},
             });
         }
         const stationExist = await query("select * from stations where id=? AND startEnd=1", id)
@@ -906,9 +904,9 @@ router8.get("/alltripstations2", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.stationIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { stationIDNOTExists :req.t("error.stationIDNOTExists")},
             });
         }
         const trip = await query("select * from trips where id=?", stationExist[0].tripID);
@@ -916,9 +914,9 @@ router8.get("/alltripstations2", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripNOTExists"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { tripNOTExists :req.t("error.tripNOTExists")},
             });
         }
         return res.status(200).json({
@@ -949,9 +947,9 @@ router8.get("/alltripstations3", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.stationIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { stationIDNOTExists: req.t("error.stationIDNOTExists")},
             });
         }
         const trip = await query("select * from trips where id=?", stationExist[0].tripID);
@@ -959,9 +957,9 @@ router8.get("/alltripstations3", userAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripNOTExists :req.t("error.tripNOTExists")},
             });
         }
         return res.status(200).json({
@@ -993,9 +991,9 @@ router8.get("/alltrips", autherized, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { limitPage :req.t("error.limitPage")},
             });
         }
         const pageNumber = parseInt(page);
@@ -1006,9 +1004,9 @@ router8.get("/alltrips", autherized, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noTripData"),
+                msg:"",
                 data: {},
-                errors: {},
+                errors: { noTripData :req.t("error.noTripData")},
             });
         }
 
@@ -1078,19 +1076,18 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { page, limit } = req.query;
@@ -1099,9 +1096,9 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { limitPage :req.t("error.limitPage")},
             });
         }
         const { startTime, endTime } = req.body;
@@ -1133,9 +1130,9 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.noTripData"),
+                    msg: "",
                     data: {},
-                    errors: {},
+                    errors: { noTripData :req.t("error.noTripData")},
                 });
             } else {
                 await Promise.all(tripsdata.result.map(async trip => {
@@ -1186,9 +1183,9 @@ router8.get("/alltripsbytime", autherized, requestTripValidationByTime, async (r
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noTripData"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noTripData :req.t("error.noTripData")},
             });
 
         }

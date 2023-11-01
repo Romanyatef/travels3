@@ -5,11 +5,11 @@ const busAuth=async (req,res,next) => {
     if (!req.headers.token) {
         return res.status(403).json({
             status: false,
-            code: 403, 
-            msg: req.t("error.invalidAuth"),
+            code: 403,
+            msg: "",
             data: {},
-            errors: {}
-})
+            errors: { invalidAuth: req.t("error.invalidAuth") }
+        })
     }
     
     const query = util.promisify(conn.query).bind(conn);//transform query into a promise to use [await/async]
@@ -22,9 +22,9 @@ const busAuth=async (req,res,next) => {
         return res.status(403).json({
             status: false,
             code: 403,
-            msg: req.t("error.invalidAuth"),
+            msg: "",
             data: {},
-            errors: {}
+            errors: { invalidAuth: req.t("error.invalidAuth") }
 });
     }
 };

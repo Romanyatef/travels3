@@ -22,9 +22,9 @@ router3.post("/add",adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.enterTerms"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { enterTerms :req.t("error.enterTerms")}
             });
         }
 
@@ -112,9 +112,9 @@ router3.put("/alter", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.enterTerms"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { enterTerms :req.t("error.enterTerms")},
             });
         }
         await query("update variety set conditions = ?  where id=2", conditions);//order by conditions

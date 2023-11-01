@@ -71,7 +71,8 @@
     "otpNotCorrect": "Invalid OTP",
     "imageNotExists": "please enter the image",
     "excelNotExists": "please enter the excel sheet",
-    "excelError": "please enter the excel sheet with valid values and make sure that you fullfile every cell in the excel sheet",
+    "excelError": "Please enter the Excel sheet with valid values and make sure that you fulfilled every cell in the Excel sheet",
+    "dataError": "Please enter the  valid values and make sure that every field is fulfilled ",
     "deviceTokenNotExists": "please enter device token",
     "emailExists": "email already exists!!",
     "emailNotExists": "email not exists!!",
@@ -104,6 +105,7 @@
     "noUser": "user not found",
     "noDriver": "driver not found",
     "noUserData": "there is no user data",
+    "noPrivateTrips": "There are no private trips",
     "typeNotvalid": "type is must be user or admin or bus",
     "userIDNOTExistsID": "please select an user to see profile",
     "NOINActiveUsers": "No users have an in-active state !",
@@ -131,6 +133,13 @@
 
   "validation": {
     "userIDNOTExists": "please select an user to send the message",
+
+    "pinkupNotExists": "please enter the place that you are in in detailed ",
+    "dropoffNotExists": "please enter the place that you want to go in detailed",
+    "timeNotExists2": "Please enter the time you want to go",
+    "seatsNotExists2": "please enter the number of the passenger that will ride the car in max 4 people",
+    "dateNotExists": "please enter the date that you want to go",
+
     "messageNotExists": "Please enter your message",
     "companyIDNotExists": "please select a company to delete the company with its vehicles",
     "novehicleID": "Please  select a vehicle",
@@ -197,6 +206,7 @@
     "currentAddressNotExists": "address coordinates are invalid",
     "workAddressNotExists2": "work address coordinates are invalid",
     "nationalityIDNotExists": "nationality is required",
+    "timeNotExists": "minutes count is required",
     "specialNeedsNotExists": "special need status is required",
     "birthDateNotExists": "birth date  is required in this formate 0000-00-00",
     "typeNotExists": "type is required",

@@ -27,19 +27,18 @@ router2.post("/pass", userAuth, passValidationRules, async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
             const translatedErrors = errors.array().map((error) => ({
-                ...error,
-                msg: req.t(error.msg),
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors,
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -69,7 +68,7 @@ router2.post("/pass", userAuth, passValidationRules, async (req, res) => {
 });
 //==========================================  view credit card  ==========================================//
 
-router2.get("/viewcredit", userAuth, async (req, res) => {
+router2.get("/viewcredit", userAuth, async (req, res) => {//////////////////////
     try {
         const user1 = res.locals.user;
         const visaexists = await query(
@@ -80,9 +79,9 @@ router2.get("/viewcredit", userAuth, async (req, res) => {
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.visaNotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { visaNotExists: req.t("error.visaNotExists") },
             });
         }
 
@@ -137,17 +136,17 @@ router2.post("/credit", userAuth, creditValidationRules, async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             const translatedErrors = errors.array().map((error) => ({
-                ...error,
-                msg: req.t(error.msg),
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors,
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const user1 = res.locals.user;
@@ -159,9 +158,9 @@ router2.post("/credit", userAuth, creditValidationRules, async (req, res) => {
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.visaExists"),
+                msg:"",
                 data: {},
-                errors: {},
+                errors: { visaExists: req.t("error.visaExists") },
             });
         }
         const Visa = {
@@ -207,19 +206,18 @@ router2.delete(
             const { cvv, cnnNumber } = req.body;
             const errors = validationResult(req);
             if (!errors.isEmpty()) {
-                const errorlink = errors.array();
                 const translatedErrors = errors.array().map((error) => ({
-                    ...error,
-                    msg: req.t(error.msg),
+                    [error.path]: req.t(error.msg)
                 }));
+
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    data: {},
                     msg: "",
-                    errors: {
-                        general:translatedErrors,
-                    },
+                    data: {},
+                    errors: translatedErrors.reduce((result, current) => {
+                        return { ...result, ...current };
+                    }, {})
                 });
             }
             const autherized = res.locals.autherized;
@@ -244,9 +242,9 @@ router2.delete(
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.visaNotExists"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { visaNotExists :req.t("error.visaNotExists")},
             });
         } catch (err) {
             console.log(err);
@@ -320,9 +318,9 @@ router2.post("/book", autherized, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripIDNOTExistsID :req.t("error.tripIDNOTExistsID")},
             });
         }
         const tripExist = await query("select * from trips where id=?", id);
@@ -330,9 +328,9 @@ router2.post("/book", autherized, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { tripIDNOTExists :req.t("error.tripIDNOTExists")},
             });
         }
 
@@ -340,9 +338,9 @@ router2.post("/book", autherized, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.tripNotValid"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { tripNotValid :req.t("error.tripNotValid")},
             });
         }
         console.log(tripExist);
@@ -362,9 +360,9 @@ router2.post("/book", autherized, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noSeats"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noSeats :req.t("error.noSeats")},
             });
         }
         const autherized = res.locals.autherized;
@@ -482,6 +480,9 @@ const validateDates = async (dates, id) => {
     return true;
 }
 
+const validateTripDate = async () => {
+    
+}
 const validateTripIds = async (tripIds) => {
     if (!Array.isArray(tripIds)) {
         return false
@@ -540,9 +541,9 @@ router2.post("/bookschedule", autherized, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.invalidInputs"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { invalidInputs :req.t("error.invalidInputs")},
             });
         }
         if (!dates.length == tripIds.length) {
@@ -550,9 +551,9 @@ router2.post("/bookschedule", autherized, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.invalidInputs"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { invalidInputs :req.t("error.invalidInputs")},
             });
         }
 
@@ -615,9 +616,9 @@ router2.post("/generate", autherized, async (req, res) => {//incomplete//add tri
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.checkoutFirst"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { checkoutFirst :req.t("error.checkoutFirst")},
             });
         }
         const userQrCode = {
@@ -659,19 +660,18 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
             const translatedErrors = errors.array().map((error) => ({
-                ...error,
-                msg: req.t(error.msg),
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general:translatedErrors,
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const autherized = res.locals.autherized;
@@ -683,9 +683,9 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.textnotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { textnotExists :req.t("error.textnotExists")},
             });
         }
 
@@ -722,9 +722,9 @@ router2.post("/scan", datascanned, autherized, async (req, res) => {//incomplete
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.checkError"),
+            msg: "",
             data: {},
-            errors: {},
+            errors: { checkError :req.t("error.checkError")},
         });
     } catch (err) {
         console.log(err);
@@ -769,19 +769,18 @@ router2.post("/fav", addAdress, autherized, async (req, res) => {//complete
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
             const translatedErrors = errors.array().map((error) => ({
-                ...error,
-                msg: req.t(error.msg),
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors,
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const autherized = res.locals.autherized;
@@ -849,9 +848,9 @@ router2.get("/inbox", autherized, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { limitPage :req.t("error.limitPage")},
             });
         }
         const autherized = res.locals.autherized;
@@ -870,9 +869,9 @@ router2.get("/inbox", autherized, async (req, res) => {//completed
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.finishPresenting"),
+            msg: "",
             data: {},
-            errors: {},
+            errors: { finishPresenting :req.t("error.finishPresenting")},
         });
 
     } catch (err) {
@@ -902,9 +901,9 @@ router2.get("/fav", autherized, async (req, res) => {//completed
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.adressesNotExists"),
+            msg: "",
             data: {},
-            errors: {},
+            errors: { adressesNotExists :req.t("error.adressesNotExists")},
         });
 
     } catch (err) {
@@ -925,9 +924,9 @@ router2.post("/promo", autherized, async (req, res) => {//incomplete//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.promoNotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { promoNotExists :req.t("validation.promoNotExists")},
             });
         }
         // const autherized = res.locals.autherized;
@@ -956,9 +955,9 @@ router2.post("/promo", autherized, async (req, res) => {//incomplete//completed
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.promoNotcorrect"),
+            msg: "",
             data: {},
-            errors: {},
+            errors: { promoNotcorrect :req.t("error.promoNotcorrect")},
         });
 
     } catch (err) {
@@ -972,7 +971,185 @@ router2.post("/promo", autherized, async (req, res) => {//incomplete//completed
         });
     }
 });
+//==========================================  add private trip  ==========================================//
+const privateTripValidationRules = [
+    body("pickup").custom((value, { req }) => {
+        if (
+            typeof value !== "string" ||
+            !isNaN(parseInt(value)) ||
+            value.length <= 3 ||
+            value.length >= 29
+        ) {
+            throw new Error("validation.pinkupNotExists");
+        }
+        return true;
+    }),
+    body('dropoff').custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
 
+                throw new Error("validation.dropoffNotExists");
+            }
+            return true;
+        }),
+    body("seats").isNumeric().withMessage("validation.seatsNotExists2"),
+    body('time').custom((value) => {
+        if (!value || typeof value !== 'string') {
+            throw new Error('validation.timeNotExists2');
+        }
+        const hours = parseInt(value.substring(0, 2));
+        const minutes = parseInt(value.substring(2, 4));
+        const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/;
+        if (!timeRegex.test(value) || hours >= 24 || minutes >= 60) {
+            throw new Error('validation.timeNotExists2');
+        }
+        return true;
+    }),
+    body("date").isISO8601().withMessage("validation.dateNotExists"),
+];
+router2.post("/Bookprivate", userAuth, privateTripValidationRules, async (req, res) => {//test
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
+            }));
+
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
+            });
+        }
+        const { pickup, dropoff, seats, time, date } = req.body;
+
+        if (seats > 4) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { seatsNotExists2: req.t("validation.seatsNotExists2")}
+            });
+        }
+
+        const user1 = res.locals.user;
+        const privateTrip = {
+            pickup: pickup,
+            dropoff: dropoff,
+            seats: seats,
+            time: time,
+            date: date,
+            userID: user1.id,
+        };
+
+        await query("insert into privatetrip set ?", privateTrip);
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("added"),
+            data: {},
+            errors: {},
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//========================================== update schedule in day ======================================//
+const scheduleTripValidationRules = [
+    body("tripId").isNumeric().withMessage("validation.seatsNotExists2"),
+    body("date").isISO8601().withMessage("validation.dateNotExists"),
+];
+router2.post("/alterschedule", scheduleTripValidationRules, autherized, async (req, res) => {//test
+    //completed
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
+            }));
+
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
+            });
+        }
+        const { tripId, date } = req.body;
+        const autherized = res.locals.autherized;
+
+        const Exits = await query("select * from userschedule where date=? AND userID=?", [date, autherized.id])
+        if (!Exits[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {}
+            });
+        }
+        const tripExists = await query("select * trips where id=?", tripId);
+        if (!tripExists[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {}
+            });
+        }
+        const currentDate = moment(date).format('YYYY-MM-DD');
+        const tripsForToday = await query("select * FROM userschedule where date= ? AND tripID=?", [currentDate, tripId])
+        const tripCount = tripsForToday.reduce((countMap, { tripID }) => {
+            countMap[tripID] = (countMap[tripID] || 0) + 1;
+            return countMap;
+        }, {});
+        console.log(tripCount);
+        const tripIDSet = new Set(tripsForToday.map(({ tripID }) => tripID));
+        const tripIDArray = Array.from(tripIDSet);
+        await Promise.all(tripIDArray.map(async (ele) => {
+            const trip = await query("select * from trips where id=?", ele)
+            await query("update vehicles set passengeersNum=? where id=?", [tripCount[ele], trip[0].vehicleIDGo])
+            await query("update vehicles set passengeersNum=? where id=?", [tripCount[ele], trip[0].vehicleIDBack])
+        }))
+
+        await query("update userschedule set tripID=? where id=?", [tripId, Exits[0].id])
+
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("updated"),
+            data: {},
+            errors: {},
+        });
+
+
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 module.exports = router2;
 
 // router.post("",(req,res)=>{

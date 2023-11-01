@@ -6,9 +6,9 @@ const adminAuth=async (req,res,next) => {
         return res.status(403).json({
             status: false,
             code: 403,
-            msg: req.t("error.invalidAuth"),
+            msg:"" ,
             data: {},
-            errors: {}
+            errors: { invalidAuth :req.t("error.invalidAuth")}
 })
     }
     
@@ -24,9 +24,9 @@ const adminAuth=async (req,res,next) => {
         return res.status(403).json({
             status: false,
             code: 403,
-            msg: req.t("error.invalidAuth"),
+            msg: "",
             data: {},
-            errors: {}
+            errors: { invalidAuth :req.t("error.invalidAuth")}
 });
     }
 };

@@ -124,19 +124,18 @@ router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) =
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -173,9 +172,9 @@ router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) =
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.invalidOtp"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { invalidOtp :req.t("error.invalidOtp")},
             });
 
         
@@ -236,32 +235,34 @@ const registrationValidationRules = [
 router.post("/register", upload.single("image"), registerAuth, registrationValidationRules, async (req, res) => {// completed
     try {
         //============  Check if there are any validation errors ============
-        if (!req.file) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.imageNotExists"),
-                data: {},
-                errors: {}
-            })
-        }
+        // if (!req.file) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: "",
+        //         data: {},
+        //         errors: { imageNotExists :req.t("error.imageNotExists")}
+        //     })
+        // }
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image
+            if (req.file) {
+            fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
 
             const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -361,7 +362,13 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
             if (observer.errors.phone.length == 0) {
                 delete observer.errors.phone
             }
-            fs.unlinkSync("./upload/" + req.file.filename);//delete image
+            if (observer.errors.phone.length == 1) {
+                observer.errors.phone = observer.errors.phone[0]
+            }
+
+            if (req.file) {
+                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
             return res.status(400).json({
                 status: false,
                 code: 400,
@@ -377,13 +384,15 @@ router.post("/register", upload.single("image"), registerAuth, registrationValid
         
         const pair = await checkExists(phone)
         if (pair.status) {
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image
+            if (req.file) {
+                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.otpWait"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { otpWait :req.t("error.otpWait")},
             });
         }
         // invalidOtp
@@ -499,19 +508,18 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
         //============ Check if there are any validation errors ============
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -543,9 +551,9 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.wrongPassword"),
+                msg:"",
                 data: {},
-                errors: {},
+                errors: { wrongPassword : req.t("error.wrongPassword")},
             });
         }
 
@@ -567,19 +575,18 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { phone } = req.body;
@@ -658,19 +665,18 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
@@ -705,9 +711,9 @@ router.post("/pass", passValidationRules2, async (req, res) => {//completed
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.otpNotCorrect"),
+                    msg: "",
                     data: {},
-                    errors: {},
+                    errors: { otpNotCorrect :req.t("error.otpNotCorrect")},
                 });
             }
         }
@@ -742,19 +748,18 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const query = util.promisify(conn.query).bind(conn); //transform query into a promise to use [await/async]
@@ -787,9 +792,9 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.otpNotCorrect"),
+                    msg: "",
                     data: {},
-                    errors: {},
+                    errors: { otpNotCorrect :req.t("error.otpNotCorrect")},
                 });
             }
         }
@@ -814,8 +819,35 @@ router.post("/pass2", passValidationRules3, async (req, res) => {//completed
     }
 });
 //======================================= edit profile =======================================//
-
-router.post("/editProfile", upload.single("image"), registrationValidationRules, autherized, async (req, res) => {
+const registrationValidationRules2 = [
+    body('userName')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
+                throw new Error("validation.namelong2");
+            }
+            return true;
+        }),
+    body('homeAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+                throw new Error("validation.homeAddressNotExists");
+            }
+            return true;
+        }),
+    // body('homeAddressLat').custom(validateHomeAddress),
+    // body('homeAddressLong').custom(validateHomeAddress),
+    // body('workAddressLat').custom(validateWorkAddress),
+    // body('workAddressLong').custom(validateWorkAddress),
+    body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
+    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
+    body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
+    body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
+    // body('email').isEmail().withMessage('validation.emailNotExists'),
+    // body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
+    body('phone').isNumeric().withMessage('validation.phoneNotExists'),
+    body('type').notEmpty().withMessage('validation.typeNotExists'),
+];
+router.post("/editProfile", upload.single("image"), registrationValidationRules2, autherized, async (req, res) => {
     try {
         const autherized = res.locals.autherized;
         const observer = {
@@ -824,8 +856,8 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
         };
         observer.errors.phone = [];
         const {
-            email,
-            password,
+            // email,
+            // password,
             phone,
             type,
             userName,
@@ -835,9 +867,7 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             birthDate,
             gender,
             specialNeeds,
-            conditions,
             statusex,
-            otp
         } = req.body;
         let imageExists = 0
         if (req.file) {
@@ -849,18 +879,18 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             if (imageExists) {
                 fs.unlinkSync("./upload/" + req.file.filename);//delete image
             }
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -894,15 +924,15 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             observer.status = false;
             observer.errors.gender = req.t("validation.genderNotExists");
         }
-        //============ check email existes in users  ============
+        // //============ check email existes in users  ============
 
-        if (!(email == autherized.email)) {
-            const emailexists = await query("select * from users where email = ? AND id <> ?", [email, autherized.id]);
-            if (emailexists[0]) {
-                observer.status = false
-                observer.errors.email = req.t("error.emailExists")
-            }
-        }
+        // if (!(email == autherized.email)) {
+        //     const emailexists = await query("select * from users where email = ? AND id <> ?", [email, autherized.id]);
+        //     if (emailexists[0]) {
+        //         observer.status = false
+        //         observer.errors.email = req.t("error.emailExists")
+        //     }
+        // }
         //============ check nationality existes in nationalities  ============
         const nationalityExists = await query("select * from nationalities where id = ?", nationalityID);
         if (!nationalityExists[0]) {
@@ -949,12 +979,16 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
             if (observer.errors.phone.length == 0) {
                 delete observer.errors.phone
             }
+            if (observer.errors.phone.length == 1) {
+                observer.errors.phone = observer.errors.phone[0]
+            }
             if (req.file) {
                 fs.unlinkSync("./upload/" + req.file.filename); //delete image
             }
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg: "",
                 data: {},
                 errors: {
                     ...observer.errors,
@@ -999,9 +1033,9 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.otpWait"),
+                    msg: "",
                     data: {},
-                    errors: {},
+                    errors: { otpWait :req.t("error.otpWait")},
                 });
 
             }
@@ -1009,9 +1043,9 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.phoneMatched"),
+                    msg: "",
                     data: {},
-                    errors: {},
+                    errors: { phoneMatched :req.t("error.phoneMatched")},
                 });
             }
             const generatedOTP = await generateOTP();
@@ -1043,56 +1077,56 @@ router.post("/editProfile", upload.single("image"), registrationValidationRules,
 
             }
         }
-        if (statusex == 1) {
-            const values = await checkExists(email);
-            if (values.status) {
-                if (imageExists) {
-                    fs.unlinkSync("./upload/" + req.file.filename); //delete image
-                }
-                return res.status(400).json({
-                    status: false,
-                    code: 400,
-                    msg: req.t("error.otpWait"),
-                    data: {},
-                    errors: {},
-                });
-            }
-            if (email == autherized.email) {
-                return res.status(400).json({
-                    status: false,
-                    code: 400,
-                    msg: req.t("error.emailMatched"),
-                    data: {},
-                    errors: {},
-                });
-            }
-            // sendOTPemail(`الرقم سري هو ${generatedOTP}`, email)
-            const generatedOTP = await generateOTP();
-            if (true) {
-                // redisClient.setEx(email, 600, generatedOTP, (err) => {
-                //     if (err) {
-                //         throw err
-                //     }
-                // });
-                await insertvalue(email, generatedOTP);
-                if (imageExists) {
-                    fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
-                }
-                await query("update users set ? where id=?", [userData, autherized.id]);
-                res.status(200).json({
-                    status: true,
-                    code: 200,
-                    msg: req.t("profileEdited") + " , " + req.t("sendOtp") + "  :" + generatedOTP,
-                    data: {},
-                    errors: {}
-                })
-                setTimeout(async() => {
-                    await deletevalue(email);
-                }, 10 * 60000);
-                return;
+        // if (statusex == 1) {
+        //     const values = await checkExists(email);
+        //     if (values.status) {
+        //         if (imageExists) {
+        //             fs.unlinkSync("./upload/" + req.file.filename); //delete image
+        //         }
+        //         return res.status(400).json({
+        //             status: false,
+        //             code: 400,
+        //             msg: "",
+        //             data: {},
+        //             errors: { otpWait :req.t("error.otpWait")},
+        //         });
+        //     }
+        //     if (email == autherized.email) {
+        //         return res.status(400).json({
+        //             status: false,
+        //             code: 400,
+        //             msg:"",
+        //             data: {},
+        //             errors: { emailMatched : req.t("error.emailMatched")},
+        //         });
+        //     }
+        //     // sendOTPemail(`الرقم سري هو ${generatedOTP}`, email)
+        //     const generatedOTP = await generateOTP();
+        //     if (true) {
+        //         // redisClient.setEx(email, 600, generatedOTP, (err) => {
+        //         //     if (err) {
+        //         //         throw err
+        //         //     }
+        //         // });
+        //         await insertvalue(email, generatedOTP);
+        //         if (imageExists) {
+        //             fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+        //         }
+        //         await query("update users set ? where id=?", [userData, autherized.id]);
+        //         res.status(200).json({
+        //             status: true,
+        //             code: 200,
+        //             msg: req.t("profileEdited") + " , " + req.t("sendOtp") + "  :" + generatedOTP,
+        //             data: {},
+        //             errors: {}
+        //         })
+        //         setTimeout(async() => {
+        //             await deletevalue(email);
+        //         }, 10 * 60000);
+        //         return;
 
-            }
-        }
+        //     }
+        // }
         if (imageExists) {
             fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
         }
@@ -1135,9 +1169,9 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
     try {
 
         const autherized = res.locals.autherized;
-
+// email
         //============ Extract data from the request body ============
-        const { otp, email, phone, nationalityID, statusex } = req.body;
+        const { otp , phone, nationalityID, statusex } = req.body;
         const observer = {
             status: true,
             errors: {}
@@ -1146,33 +1180,32 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
         //============  Check if there are any validation errors ============ 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors 
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
-
         observer.errors.phone = [];
 
 
 
-        //============ check email existes in users  ============
-        if (!(email == autherized.email)) {
-            const emailexists = await query("select * from users where email = ? AND id <> ?", [email, autherized.id]);
-            if (emailexists[0]) {
-                observer.status = false
-                observer.errors.email = req.t("error.emailExists")
-            }
-        }
+        // //============ check email existes in users  ============
+        // if (!(email == autherized.email)) {
+        //     const emailexists = await query("select * from users where email = ? AND id <> ?", [email, autherized.id]);
+        //     if (emailexists[0]) {
+        //         observer.status = false
+        //         observer.errors.email = req.t("error.emailExists")
+        //     }
+        // }
         //============ check phone existes in users  ============
         if (!(phone == autherized.phone)) {
             const phoneExists = await query("select * from users where phone = ? AND id <> ?", [phone, autherized.id]);
@@ -1220,9 +1253,13 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
             if (observer.errors.phone.length == 0) {
                 delete observer.errors.phone
             }
+            if (observer.errors.phone.length == 1) {
+                observer.errors.phone = observer.errors.phone[0]
+            }
             return res.status(400).json({
                 status: false,
                 code: 400,
+                msg:"",
                 data: {},
                 errors: {
                     ...observer.errors
@@ -1237,9 +1274,9 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
                 return res.status(400).json({
                     status: false,
                     code: 400,
-                    msg: req.t("error.otpExpired"),
+                    msg: "",
                     data: {},
-                    errors: {}
+                    errors: { otpExpired :req.t("error.otpExpired")}
 
                 })
             }
@@ -1270,9 +1307,9 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.otpNotCorrect"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { otpNotCorrect :req.t("error.otpNotCorrect")},
             });
 
 
@@ -1280,58 +1317,58 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
 
         }
-        if (statusex == 1) {
-            const value = (await checkExists(email.toString()))
-            console.log(value);
-            if (!value.status) {
-                return res.status(400).json({
-                    status: false,
-                    code: 400,
-                    msg: req.t("error.otpExpired"),
-                    data: {},
-                    errors: {}
+//         if (statusex == 1) {
+//             const value = (await checkExists(email.toString()))
+//             console.log(value);
+//             if (!value.status) {
+//                 return res.status(400).json({
+//                     status: false,
+//                     code: 400,
+//                     msg: "",
+//                     data: {},
+//                     errors: { otpExpired :req.t("error.otpExpired")}
 
-                })
-            }
+//                 })
+//             }
 
-//   value.value1         
-            if ( 999999== otp) {
-                // await redisClient.del(email.toString(), async (err) => {
-                //     if (err) {
-                //         throw err;
-                //     }
-                // });
-                await deletevalue(email.toString());
-                const userData = {
-                    email: email
-                }
+// //   value.value1         
+//             if ( 999999== otp) {
+//                 // await redisClient.del(email.toString(), async (err) => {
+//                 //     if (err) {
+//                 //         throw err;
+//                 //     }
+//                 // });
+//                 await deletevalue(email.toString());
+//                 const userData = {
+//                     email: email
+//                 }
 
-                await query("update users set ? where id=?", [userData, autherized.id]);
-                return res.status(200).json({
-                    status: true,
-                    code: 200,
-                    msg: req.t("profileEdited"),
-                    data: {},
-                    errors: {}
+//                 await query("update users set ? where id=?", [userData, autherized.id]);
+//                 return res.status(200).json({
+//                     status: true,
+//                     code: 200,
+//                     msg: req.t("profileEdited"),
+//                     data: {},
+//                     errors: {}
 
-                })
-            }
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: req.t("error.otpNotCorrect"),
-                data: {},
-                errors: {},
-            });
-        }
+//                 })
+//             }
+//             return res.status(400).json({
+//                 status: false,
+//                 code: 400,
+//                 msg:"",
+//                 data: {},
+//                 errors: { otpNotCorrect : req.t("error.otpNotCorrect")},
+//             });
+//         }
 
 
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.invalidOperation"),
+            msg: "",
             data: {},
-            errors: {},
+            errors: { invalidOperation :req.t("error.invalidOperation")},
         });
 
 

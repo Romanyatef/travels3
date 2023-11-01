@@ -8,9 +8,9 @@ const registerAuth = async (req, res, next) => {
             return res.status(403).json({
                 status: false,
                 code: 403,
-                msg: req.t("error.invalidAuth"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { invalidAuth: req.t("error.invalidAuth") }
             });
         }
         const admin = await query("select * from users where token = ?", token);
@@ -18,9 +18,9 @@ const registerAuth = async (req, res, next) => {
             return res.status(403).json({
             status: false,
             code: 403,
-            msg: req.t("error.invalidAuth"),
-            data: {},
-            errors: {}
+                msg: "",
+                data: {},
+                errors: { invalidAuth: req.t("error.invalidAuth") }
         });
         }
         

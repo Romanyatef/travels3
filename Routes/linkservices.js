@@ -24,6 +24,7 @@ const generalValidationRules = [
             return true;
         }),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
+    body('time').isNumeric().withMessage('validation.timeNotExists'),
     body('lLink').custom((value) => {
         if (!value || typeof value !== 'string') {
             throw new Error('validation.lLinkNotExists');
@@ -120,22 +121,21 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
-        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressLink, nationalityID, about } = req.body
+        const { tLink, lLink, fLink, wLink, hourEnd, hourStart, dayEnd, dayStart, phone, adressLink, nationalityID, about, time } = req.body
 
         const date1 = new Date(`2000-01-01 ${hourEnd}`);
         const date2 = new Date(`2000-01-01 ${hourStart}`);
@@ -145,9 +145,9 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.hourdifference"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { hourdifference :req.t("error.hourdifference")}
             });
         }
         const countryCode = await query("select countryCode from nationalities where id=?", nationalityID)
@@ -179,7 +179,8 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
             dayStart: dayStart,
             phone: phone,
             adressLink: adressLink,
-            about: about
+            about: about,
+            time:time,
         }
         await query("update variety set ? where id=2", subject);
         return res.status(200).json({
@@ -201,7 +202,6 @@ router3.post("/add", adminAuth, generalValidationRules, async (req, res) => {//c
     }
 });
 
-
 //==========================================  delete link ==========================================//
 router3.delete("/delete", adminAuth, async (req, res) => {//completed
     try {
@@ -210,9 +210,9 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noLink"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { noLink :req.t("error.noLink")}
             })
         }
         const subject = {

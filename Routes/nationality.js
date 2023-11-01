@@ -41,19 +41,18 @@ router3.post("/add", nationalityValidationRules, async (req, res) => {//complete
         const { nationalityEN, nationalityAR, countryCode } = req.body
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -125,9 +124,9 @@ router3.delete("/delete", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.nationalityIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { nationalityIDNOTExists :req.t("error.nationalityIDNOTExists")}
             })
         }
 
@@ -193,19 +192,18 @@ router3.put("/alter", adminAuth, nationalityUpdateValidationRules, async (req, r
         const { nationalityAR, nationalityEN, countryCode, id } = req.body
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg:"",
+                msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 

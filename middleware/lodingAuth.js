@@ -6,18 +6,18 @@ const userAuthlog = async (req, res, next) => {
         return res.status(404).json({
             status: false,
             code: 404,
-            msg: req.t("error.typeNotvalid"),
+            msg: "",
             data: {},
-            errors: {}
+            errors: { typeNotvalid :req.t("error.typeNotvalid")}
         })
     }
     if (!req.body.devicetoken) {
         return res.status(403).json({
             status: false,
             code: 403,
-            msg: req.t("error.invalidAuth"),
+            msg: "",
             data: {},
-            errors: {}
+            errors: { invalidAuth: req.t("error.invalidAuth") }
 })
     }
     
@@ -28,9 +28,9 @@ const userAuthlog = async (req, res, next) => {
         return res.status(404).json({
             status: false,
             code: 404,
-            msg: req.t("error.emailNotExists"),
+            msg: "",
             data: {},
-            errors: {}
+            errors: { emailNotExists :req.t("error.emailNotExists")}
         })
     }
     // if (user[0].deviceToken == req.body.deviceToken) {//&& user[0].status==1

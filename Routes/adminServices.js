@@ -13,9 +13,34 @@ const phoneNumber = require('libphonenumber-js')
 const bcrypt = require("bcrypt");
 const { promises } = require('dns');
 const crypto = require("crypto");
-const sendnotification=require("../index.js")
+const sendnotification = require("../index.js")
 
 
+const paginatedResults2 = async (tableName, page, limit) => {
+    const startIndex = (page - 1) * limit;
+    const query2 = `select * from ${tableName} limit ? offset ?`;
+    const result = await query(query2, [(limit + 1), startIndex]);
+    const userData = {
+        result: result,
+        statusPrevious: true,
+        statusNext: true,
+        numRecords: (await query(`select count(*) as countusers from ${tableName}`))[0].countusers
+    }
+    if (!(result.length == limit + 1)) {
+        userData.statusNext = false
+    }
+    if (result.length == limit + 1) {
+        await userData.result.pop();
+    }
+
+    if (startIndex == 0) {
+        userData.statusPrevious = false
+    }
+
+
+
+    return userData;
+};
 const paginatedResults = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
     const user = "user";
@@ -25,7 +50,7 @@ const paginatedResults = async (tableName, page, limit) => {
         result: result,
         statusPrevious: true,
         statusNext: true,
-        numRecords: (await query(`select count(*) as countusers from ${tableName}`))[0].countusers
+        numRecords: (await query(`select count(*) as countusers from ${tableName} where type=${user}`))[0].countusers
     }
     if (!(result.length == limit + 1)) {
         userData.statusNext = false
@@ -52,9 +77,9 @@ router6.get("/userdata", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.userIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { userIDNOTExistsID: req.t("error.userIDNOTExistsID") },
             });
         }
 
@@ -63,9 +88,9 @@ router6.get("/userdata", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noUserData"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noUserData: req.t("error.noUserData") },
             });
         }
         delete data[0].password;
@@ -124,9 +149,9 @@ router6.get("/inactive", adminAuth, async (req, res) => {// completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { limitPage: req.t("error.limitPage") },
             });
         }
         const pageNumber = parseInt(page);
@@ -157,9 +182,9 @@ router6.get("/inactive", adminAuth, async (req, res) => {// completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noData"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noData: req.t("error.noData") },
             });
         } else {
             const fun = (elemn) => {
@@ -197,9 +222,9 @@ router6.get("/viewusers", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.limitPage"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { limitPage: req.t("error.limitPage") },
             });
         }
         const pageNumber = parseInt(page);
@@ -209,9 +234,9 @@ router6.get("/viewusers", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noData"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noData: req.t("error.noData") },
             });
         }
         const fun = async (elemn) => {
@@ -276,9 +301,9 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.userIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { userIDNOTExistsID: req.t("error.userIDNOTExistsID") },
             });
         }
         const { operation } = req.query;
@@ -286,9 +311,9 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.invalidOperation"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { invalidOperation :req.t("error.invalidOperation")},
             });
         }
 
@@ -308,9 +333,9 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
                     return res.status(400).json({
                         status: false,
                         code: 400,
-                        msg: req.t("error.userActivated"),
+                        msg: "",
                         data: {},
-                        errors: {},
+                        errors: { userActivated: req.t("error.userActivated") },
                     });
                 }
                 await query("update users set status = 1 where id =? ", id);
@@ -327,9 +352,9 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
                         return res.status(400).json({
                             status: false,
                             code: 400,
-                            msg: req.t("error.userInactivated"),
+                            msg: "",
                             data: {},
-                            errors: {},
+                            errors: { userInactivated :req.t("error.userInactivated")},
                         });
                     }
                     await query("update users set status = 0 where id =? ", id);
@@ -344,9 +369,9 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
                     return res.status(400).json({
                         status: false,
                         code: 400,
-                        msg: req.t("error.invalidOperation"),
+                        msg: "",
                         data: {},
-                        errors: {},
+                        errors: { invalidOperation :req.t("error.invalidOperation")},
                     });
                 }
             }
@@ -441,7 +466,7 @@ router6.post("/driverregister", (req, res, next) => {//completed4
                 msg: "",
                 data: {},
                 errors: {
-                    general: [{ images: `${req.t("imagesValidation.imagesRequired")} ${missingPhotos.join(',')}` }]
+                    images: `${req.t("imagesValidation.imagesRequired")} ${missingPhotos.join(',')}`
                 },
             });
         }
@@ -452,20 +477,18 @@ router6.post("/driverregister", (req, res, next) => {//completed4
             if (!imagesDeleted) {
                 await deleteUploadedFiles(req.files);
             }
-
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
 
@@ -586,8 +609,6 @@ router6.post("/driverregister", (req, res, next) => {//completed4
         });
     }
 });
-
-
 async function deleteUploadedFiles(files) {
     const deletePromises = Object.values(files).flatMap(filesArray => {
         return filesArray.map(file => deleteFileIfExists(file.path));
@@ -604,8 +625,6 @@ async function deleteFileIfExists(filePath) {
         console.log(`Failed to delete file: ${filePath}`);
     }
 }
-
-
 //================================= delete driver  =================================//
 router6.delete("/deleteDriverProfile", adminAuth, async (req, res) => {//completed
     try {
@@ -614,9 +633,9 @@ router6.delete("/deleteDriverProfile", adminAuth, async (req, res) => {//complet
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.userIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { userIDNOTExistsID :req.t("error.userIDNOTExistsID")},
             });
         }
         checkExistss = await query("select * from driver where id=?", id);
@@ -624,9 +643,9 @@ router6.delete("/deleteDriverProfile", adminAuth, async (req, res) => {//complet
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noDriver"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { noDriver :req.t("error.noDriver")},
             });
         }
         const filesArray = [checkExistss[0].tradeLicense, checkExistss[0].carLicense, checkExistss[0].drivingLicense, checkExistss[0].residenceVisa, checkExistss[0].passport, checkExistss[0].profile_image]
@@ -652,10 +671,7 @@ router6.delete("/deleteDriverProfile", adminAuth, async (req, res) => {//complet
         });
     }
 });
-
-
 //================================= delete user profile  =================================//
-
 router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
     try {
         const { id } = req.query
@@ -663,9 +679,9 @@ router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.userIDNOTExistsID"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { userIDNOTExistsID :req.t("error.userIDNOTExistsID")},
             });
         }
         checkExistss = await query("select * from users where id=?", id);
@@ -673,9 +689,9 @@ router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noUser"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { noUser :req.t("error.noUser")},
             });
         }
         await query("delete from users where id = ? ", id)
@@ -702,8 +718,6 @@ router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
         });
     }
 });
-
-
 //================================= create new vehicle  =================================//
 const isFloat = require("./travelsOperations.js").isFloat
 const validateLocationAddress = (value, { req }) => {
@@ -773,19 +787,18 @@ router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, re
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { model, vehicleNum, seats, vehiclecolorEN, vehiclecolorAR, companyID, time, locationlong, locationlat } = req.body
@@ -795,9 +808,9 @@ router6.post("/createvehicle", vehicleValidationRules, adminAuth, async (req, re
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.companyIDNotexists"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { companyIDNotexists :req.t("error.companyIDNotexists")}
             });
         }
         const vehicleData = {
@@ -840,9 +853,9 @@ router6.delete("/deletevehicle", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.novehicleID"),
+                msg:"",
                 data: {},
-                errors: {}
+                errors: { novehicleID: req.t("validation.novehicleID")}
             });
         }
         const vehicleExists = await query("select * from vehicles where id=?", req.query.id)
@@ -850,9 +863,9 @@ router6.delete("/deletevehicle", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.novehicle"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { novehicle :req.t("error.novehicle")}
             });
         }
         await query("delete from vehicles where id=?", req.query.id)
@@ -860,7 +873,7 @@ router6.delete("/deletevehicle", adminAuth, async (req, res) => {//complete
             status: true,
             code: 200,
             msg: req.t("deleted"),
-            data:{},
+            data: {},
             errors: {},
 
         })
@@ -883,9 +896,9 @@ router6.delete("/deletecompany", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.companyIDNotExists"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { companyIDNotExists :req.t("validation.companyIDNotExists")}
             });
         }
         const vehicleExists = await query("select * from companies where id=?", req.query.id)
@@ -893,9 +906,9 @@ router6.delete("/deletecompany", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.nocompanies"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { nocompanies :req.t("error.nocompanies")}
             });
         }
         await query("delete from companies where id=?", req.query.id)
@@ -935,19 +948,18 @@ router6.post("/createcompany", companyValidationRules, adminAuth, async (req, re
 
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { companyName } = req.body
@@ -957,9 +969,9 @@ router6.post("/createcompany", companyValidationRules, adminAuth, async (req, re
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.companyNameExists"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { companyNameExists :req.t("error.companyNameExists")}
             });
         }
         const companyData = {
@@ -996,9 +1008,9 @@ router6.get("/companies", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.companiesNotExists"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { companiesNotExists :req.t("error.companiesNotExists")}
             });
         }
 
@@ -1029,19 +1041,19 @@ router6.get("/vehicless", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.companyIDNotExists"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { companyIDNotExists :req.t("error.companyIDNotExists")}
             });
         }
-        const companyExists = await query("select * from companies where id=? ",req.query.id)
+        const companyExists = await query("select * from companies where id=? ", req.query.id)
         if (!companyExists[0]) {
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.companyNotExists"),
+                msg: "",
                 data: {},
-                errors: {}
+                errors: { companyNotExists :req.t("error.companyNotExists")}
             });
         }
         const vehicles = await query("select * from vehicles where companyID=? ", req.query.id)
@@ -1049,9 +1061,9 @@ router6.get("/vehicless", adminAuth, async (req, res) => {//complete
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.novehicles"),
+                msg:"" ,
                 data: {},
-                errors: {}
+                errors: { novehicles :req.t("error.novehicles")}
             });
         }
         return res.status(200).json({
@@ -1084,41 +1096,40 @@ const menValidationRules = [
                 throw new Error("validation.vehicleIDNotExists");
             }
             return true;
-    }),
+        }),
     body('content')
-            .custom((value, { req }) => {
-                if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
 
-                    throw new Error("validation.contentNotExists");
-                }
-                return true;
-    }),
+                throw new Error("validation.contentNotExists");
+            }
+            return true;
+        }),
     body('withHow')
-            .custom((value, { req }) => {
-                    if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
 
-                        throw new Error("validation.withHowNotExists");
-                    }
-                    return true;
-    })
+                throw new Error("validation.withHowNotExists");
+            }
+            return true;
+        })
 ];
 router6.post("/createmaintenance", menValidationRules, adminAuth, async (req, res) => {//completed
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            const errorlink = errors.array();
-            const translatedErrors = errors.array().map(error => ({
-                ...error,
-                msg: req.t(error.msg)
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
             }));
+
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg: "",
                 data: {},
-                errors: {
-                    general: translatedErrors
-                },
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
             });
         }
         const { vehicleID, content, withHow } = req.body
@@ -1128,9 +1139,9 @@ router6.post("/createmaintenance", menValidationRules, adminAuth, async (req, re
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.vehicleNotExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { vehicleNotExists: req.t("validation.vehicleNotExists") },
 
             })
         }
@@ -1170,9 +1181,9 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.menIDNOTExists"),
+                msg: "",
                 data: {},
-                errors: {},
+                errors: { menIDNOTExists :req.t("error.menIDNOTExists")},
             });
         }
         const vehicleEXists = await query("select * from vehicles where id =?", id)
@@ -1180,9 +1191,9 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("validation.vehicleNotExists"),
+                msg:"" ,
                 data: {},
-                errors: {},
+                errors: { vehicleNotExists: req.t("validation.vehicleNotExists")},
             })
         }
         const maintenanceTripData = await query("select * from maintenance where vehicleID =?", id)
@@ -1190,9 +1201,9 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.menIDNOTExists"),
+                msg:"",
                 data: {},
-                errors: {}, 
+                errors: { menIDNOTExists : req.t("error.menIDNOTExists")},
             })
         }
         return res.status(200).json({
@@ -1217,7 +1228,6 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
 });
 
 //==========================================  add promo and send ==========================================//
-
 router6.post("/addpromo", adminAuth, async (req, res) => {//incompleted
     try {
         const { promo } = req.body
@@ -1226,23 +1236,23 @@ router6.post("/addpromo", adminAuth, async (req, res) => {//incompleted
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.enterPromo"),
-                errors: {},
-                data: {}
+                msg: "",
+                data: {},
+                errors: { enterPromo :req.t("error.enterPromo")},
             });
         }
 
         // const termsexists = await query("select * from variety where id=2");
         // if (termsexists[0].promo) {
-            await query("update variety set promo = ? where id=2", promo);//order by conditions
+        await query("update variety set promo = ? counter=30 where id=2", promo);//order by conditions
 
-            return res.status(200).json({
-                status: true,
-                code: 200,
-                msg: req.t("updated"),
-                errors: {},
-                data: {}
-            })
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: req.t("added"),
+            errors: {},
+            data: {}
+        })
         // }
         // const subject = { conditions: req.body.conditions }
         // await query("update  variety set  promo= ? where id=2", promo);
@@ -1273,22 +1283,22 @@ const sendnotificationbody = [body('message')
         }
         return true;
     }),
-    body('id').isNumeric().withMessage("validation.userIDNOTExists")]
+body('id').isNumeric().withMessage("validation.userIDNOTExists")]
 router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, res) => {//incompleted
     try {
         const { id, message } = req.body
-        const userExists=await query("select * from users where id =?",id)
+        const userExists = await query("select * from users where id =?", id)
         if (!userExists[0]) {
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.noUser"),
-                errors: {},
-                data: {}
+                msg: "",
+                data: {},
+                errors: { noUser :req.t("error.noUser")},
             });
         }
         //+++++++++++     notification ==>we can modify it to be a kind of notification send in the request +++++++++++++  
-        const send=await sendnotification("notification")
+        const send = await sendnotification("notification")
         // const termsexists = await query("select * from variety where id=2");
         // if (termsexists[0].promo) {
         if (send) {
@@ -1305,9 +1315,9 @@ router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, r
         return res.status(400).json({
             status: false,
             code: 400,
-            msg: req.t("error.notsend"),
-            errors: {},
-            data: {}
+            msg: "",
+            data: {},
+            errors: { notsend :req.t("error.notsend")},
         });
     } catch (err) {
         return res.status(500).json({
@@ -1320,6 +1330,50 @@ router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, r
     }
 });
 // "noPromo": "there is no fqa to delete",
+//==========================================  get private trips  ==========================================//
+router6.get("/Bookprivate",adminAuth, async (req, res) => {//test
+    try {
+        const { page, limit } = req.query;
+        if (!(Boolean(limit) && Boolean(page))) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { limitPage: req.t("error.limitPage") },
+            });
+        }
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const trips = await paginatedResults2("privateTrip", pageNumber, limitNumber)
+        if (!trips[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { noUser: req.t("error.noPrivateTrips") },
+            });
+        }
+        // const user1 = res.locals.user;
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: trips,
+            errors: {},
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 module.exports = {
     router6: router6,

@@ -24,9 +24,9 @@ router3.post("/add", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.enterFqa"),
-                errors: {},
-                data: {}
+                msg: "",
+                data: {},
+                errors: { enterFqa : req.t("error.enterFqa")},
             });
         }
 
@@ -108,9 +108,9 @@ router3.put("/alter", adminAuth, async (req, res) => {//completed
             return res.status(400).json({
                 status: false,
                 code: 400,
-                msg: req.t("error.enterFqa"),
-                errors: {},
-                data: {}
+                msg: "",
+                data: {},
+                errors: { enterFqa :req.t("error.enterFqa")},
             });
         }
         await query("update variety set fqa = ? where id=2", fqa);
