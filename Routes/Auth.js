@@ -847,7 +847,7 @@ const registrationValidationRules2 = [
     body('phone').isNumeric().withMessage('validation.phoneNotExists'),
     body('type').notEmpty().withMessage('validation.typeNotExists'),
 ];
-router.post("/editProfile", upload.single("image"), registrationValidationRules2, autherized, async (req, res) => {
+router.post("/editProfile", upload.single("image"),registrationValidationRules2, autherized, async (req, res) => {
     try {
         const autherized = res.locals.autherized;
         const observer = {

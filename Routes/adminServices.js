@@ -18,8 +18,9 @@ const sendnotification = require("../index.js")
 
 const paginatedResults2 = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
-    const query2 = `select * from ${tableName} limit ? offset ?`;
+    const query2 = `select * from ${tableName}  limit ? offset ?`;
     const result = await query(query2, [(limit + 1), startIndex]);
+    console.log(result);
     const userData = {
         result: result,
         statusPrevious: true,
@@ -1086,6 +1087,50 @@ router6.get("/vehicless", adminAuth, async (req, res) => {//complete
         });
     }
 });
+//============================== get all vehicle===========================
+router6.get("/vehicles", adminAuth, async (req, res) => {//complete
+    try {
+        const { page, limit } = req.query;
+        if (!(Boolean(limit) && Boolean(page))) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { limitPage: req.t("error.limitPage") },
+            });
+        }
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const vehicles = await paginatedResults2("vehicles", pageNumber, limitNumber)
+        if (!vehicles.result[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { novehicles: req.t("error.novehicles") },
+            });
+        }
+        // const user1 = res.locals.user;
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: vehicles,
+            errors: {},
+        });
+} catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 //================================= create new maintenance for vehicle  =================================//
 const menValidationRules = [
@@ -1346,7 +1391,7 @@ router6.get("/Bookprivate",adminAuth, async (req, res) => {//test
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const trips = await paginatedResults2("privateTrip", pageNumber, limitNumber)
-        if (!trips[0]) {
+        if (!trips.result[0]) {
             return res.status(400).json({
                 status: false,
                 code: 400,
