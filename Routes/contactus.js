@@ -10,7 +10,6 @@ const query = util.promisify(conn.query).bind(conn); //transform query into a pr
 const upload = require("../middleware/uploadImages.js");
 const fs = require("fs");
 
-// const deleteUploadedFiles=require("./adminServices.js")
 async function deleteUploadedFiles(files) {
     // console.log('files:', files);
 
@@ -23,13 +22,6 @@ async function deleteUploadedFiles(files) {
 
     await Promise.all(deletePromises);
 }
-// async function deleteUploadedFiles(files) {
-//     console.log('files:', files);
-
-//     const deletePromises = files.map(file => deleteFileIfExists(file.path));
-
-//     await Promise.all(deletePromises);
-// }
 async function deleteFileIfExists(filePath) {
     try {
         await fs.promises.access(filePath, fs.constants.F_OK);
@@ -86,7 +78,7 @@ const validationRules = [
         }),
 ];
 // 
-router6.post("/complaints",upload.array("images"),validationRules, userAuth , async (req, res) => {//test
+router6.post("/complaints",upload.array("images"),validationRules, userAuth , async (req, res) => {//completed
 
     try {
         //============  Check if there are any validation errors ============
@@ -170,7 +162,7 @@ const alter = async (e) => {
     e.actualuserName = user[0].userName
     e.actualphone = user[0].phone
 }
-router6.get("/solve", adminAuth, async (req, res) => {//test
+router6.get("/solve", adminAuth, async (req, res) => {//completed
     try {
         const { page, limit } = req.query;
         if (!(Boolean(limit) && Boolean(page))) {
@@ -185,18 +177,18 @@ router6.get("/solve", adminAuth, async (req, res) => {//test
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const complaints = await paginatedResults("contactus", pageNumber, limitNumber)
-        const host = req.get('host');
+        // const host = req.get('host');
         if (complaints.result[0]) {
-            await Promise.all(complaints.result.map(async (ele) => {
-                const images = await query("select * from contactusimages where contactusID =?", ele.id);
-                if (images[0]) {
-                    ele.images = images.map((ele2) => {
-                        const imageUrl = `http://${host}/upload/${ele2.image}`;
-                        delete ele2.contactusID;
-                        return { ...ele2, image: imageUrl };
-                    });
-                }
-            }));
+            // await Promise.all(complaints.result.map(async (ele) => {
+            //     const images = await query("select * from contactusimages where contactusID =?", ele.id);
+            //     if (images[0]) {
+            //         ele.images = images.map((ele2) => {
+            //             const imageUrl = `http://${host}/upload/${ele2.image}`;
+            //             delete ele2.contactusID;
+            //             return { ...ele2, image: imageUrl };
+            //         });
+            //     }
+            // }));
             await Promise.all(complaints.result.map(alter));
             
             return res.status(200).json({
@@ -227,7 +219,65 @@ router6.get("/solve", adminAuth, async (req, res) => {//test
         });
     }
 });
+router6.get("/details", adminAuth, async (req, res) => {//completed
+    try {
+        const { id } = req.query
+        if (!id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { contactIDNOTExists: req.t("error.contactNOTExistsID") },
+            });
+        }
+        const complain = await query("select * from contactus where id=?",id)
+        const host = req.get('host');
+        if (complain[0]) {
+            await Promise.all(complain.map(async (ele) => {
+                const images = await query("select * from contactusimages where contactusID =?", ele.id);
+                if (images[0]) {
+                    ele.images = images.map((ele2) => {
+                        const imageUrl = `http://${host}/upload/${ele2.image}`;
+                        delete ele2.contactusID;
+                        return { ...ele2, image: imageUrl };
+                    });
+                }
+            }));
+            await Promise.all(complain.map(alter));
+            
+            return res.status(200).json({
+                status: true,
+                code: 200,
+                msg: "",
+                data: complain[0],
+                errors: {},
+            });
+        }
+
+        return res.status(404).json({
+            status: false,
+            code: 404,
+            msg: req.t("error.complainsNotExists"),
+            data: {},
+            errors: {},
+        });
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 
 
 
-module.exports = router6;
+module.exports = {
+    router6: router6,
+    paginatedResults: paginatedResults
+};

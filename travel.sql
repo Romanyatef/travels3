@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 01, 2023 at 02:39 PM
+-- Generation Time: Nov 05, 2023 at 03:32 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -37,7 +37,8 @@ CREATE TABLE `companies` (
 --
 
 INSERT INTO `companies` (`id`, `companyName`) VALUES
-(2, 'toyota');
+(2, 'toyota'),
+(3, 'company1');
 
 -- --------------------------------------------------------
 
@@ -157,7 +158,7 @@ CREATE TABLE `driver` (
 --
 
 INSERT INTO `driver` (`id`, `fullName`, `mobileNumber`, `token`, `emailAddress`, `password`, `homeAddress`, `dateOfBirth`, `emiratesID`, `profile_image`, `passport`, `residenceVisa`, `drivingLicense`, `carLicense`, `tradeLicense`, `joiningDate`, `gender`, `individualOrCorporate`, `companyName`, `status`) VALUES
-(4, 'romany atef atia atia  ', '+201223958299', '3d1af9ae3a61f380b5183a9a21eb5789', 'romany@gmail.com', '$2b$10$MgoKM.DSVCddFfWhxfBDIO4YE1BZbmU3ShJNFKe1p.u25qtwhdsBe', 'cairo', '2001-03-31', '32832832828923898328', '1697792910292-589961089.jpg', '1697792910293-648135760.jpg', '1697792910295-117317556.jpg', '1697792910293-280416662.jpg', '1697792910296-624809063.jpg', '1697792910295-808891009.jpg', '2023-10-20', 1, 0, NULL, 1);
+(4, 'romany atef atia atia  ', '+201223958299', '3d1af9ae3a61f380b5183a9a21eb5789', 'romany@gmail.com', '$2b$10$MgoKM.DSVCddFfWhxfBDIO4YE1BZbmU3ShJNFKe1p.u25qtwhdsBe', 'cairo', '2001-03-31', '32832832828923898328', '1698773559374-37408851.jpeg', '1698773559374-37408851.jpeg', '1698773559374-37408851.jpeg', '1698773559374-37408851.jpeg', '1698773559374-37408851.jpeg', '1698773559374-37408851.jpeg', '2023-10-20', 1, 0, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -240,6 +241,14 @@ CREATE TABLE `maintenance` (
   `withHow` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `maintenance`
+--
+
+INSERT INTO `maintenance` (`id`, `vehicleID`, `content`, `withHow`) VALUES
+(3, 6, 'jnsnsmviw', 'CAIRO CORP'),
+(4, 6, 'jnsnsmviw', 'CAIRO CORP');
+
 -- --------------------------------------------------------
 
 --
@@ -273,13 +282,6 @@ CREATE TABLE `otpstoring` (
   `masterkey` varchar(255) NOT NULL,
   `value` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `otpstoring`
---
-
-INSERT INTO `otpstoring` (`id`, `masterkey`, `value`) VALUES
-(41, '01223958292', '367850');
 
 -- --------------------------------------------------------
 
@@ -367,7 +369,26 @@ INSERT INTO `stations` (`id`, `tripID`, `latitude`, `longitude`, `startEnd`, `ra
 (149, 23, 30.06323, 31.24701, NULL, 16, 'Egyptian Museum', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '06:35:09', '09:45:09'),
 (150, 23, 30.05845, 31.30232, NULL, 17, 'Masaken El-Remaya', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 9.3 km from the city centre, which is approximately a 20 minute ride.', '06:45:09', '09:55:09'),
 (151, 23, 30.06323, 31.24702, NULL, 18, 'Hadayek Al-Ahram', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 4.6 km from the city centre, which is approximately a 15 minute ride.', '06:55:09', '10:05:09'),
-(152, 23, 30.05845, 31.30233, 1, 19, 'El-Wahat Road', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '07:05:09', '10:15:09');
+(152, 23, 30.05845, 31.30233, 1, 19, 'El-Wahat Road', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '07:05:09', '10:15:09'),
+(205, 40, 30.05845, 31.30224, 0, 1, 'Heliopolis', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '04:05:09', '07:15:09'),
+(206, 40, 30.06323, 31.24694, NULL, 2, 'Ramses Square', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 817 metres from the city centre, which is only a 11 minute walking distance so you can also reach it on foot.', '04:15:09', '07:25:09'),
+(207, 40, 30.05845, 31.30225, NULL, 3, 'El-Torgoman', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 12.3 km from the city centre, which is approximately a 21 minute ride.', '04:25:09', '07:35:09'),
+(208, 40, 30.06323, 31.24695, NULL, 4, 'Hadayek Al-Ahram', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '04:35:09', '07:45:09'),
+(209, 40, 30.05845, 31.30226, NULL, 5, 'Masaken El-Remaya', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 9.3 km from the city centre, which is approximately a 20 minute ride.', '04:45:09', '07:55:09'),
+(210, 40, 30.06323, 31.24696, NULL, 6, 'El-Malek El-Saleh', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 4.6 km from the city centre, which is approximately a 15 minute ride.', '04:55:09', '08:05:09'),
+(211, 40, 30.05845, 31.30227, NULL, 7, 'El-Malek El-Saleh', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '04:05:09', '08:15:09'),
+(212, 40, 30.06323, 31.24697, NULL, 8, 'El-Sawah Square', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 817 metres from the city centre, which is only a 11 minute walking distance so you can also reach it on foot.', '05:15:09', '08:25:09'),
+(213, 40, 30.05845, 31.30228, NULL, 9, 'El- Mataria Square', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 12.3 km from the city centre, which is approximately a 21 minute ride.', '05:25:09', '08:35:09'),
+(214, 40, 30.06323, 31.24698, NULL, 10, 'El-Qalaa', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '05:35:09', '08:45:09'),
+(215, 40, 30.05845, 31.30229, NULL, 11, 'Islamic Cairo', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 9.3 km from the city centre, which is approximately a 20 minute ride.', '05:45:09', '08:55:09'),
+(216, 40, 30.06323, 31.24699, NULL, 12, 'Nasr City', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 4.6 km from the city centre, which is approximately a 15 minute ride.', '05:55:09', '09:05:09'),
+(217, 40, 30.05845, 31.3023, NULL, 13, 'Zahraa Nasr City', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '06:05:09', '09:15:09'),
+(218, 40, 30.06323, 31.247, NULL, 14, 'El-Malek El-Saleh', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 817 metres from the city centre, which is only a 11 minute walking distance so you can also reach it on foot.', '06:15:09', '09:25:09'),
+(219, 40, 30.05845, 31.30231, NULL, 15, 'Giza', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 12.3 km from the city centre, which is approximately a 21 minute ride.', '06:25:09', '09:35:09'),
+(220, 40, 30.06323, 31.24701, NULL, 16, 'Egyptian Museum', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '06:35:09', '09:45:09'),
+(221, 40, 30.05845, 31.30232, NULL, 17, 'Masaken El-Remaya', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 9.3 km from the city centre, which is approximately a 20 minute ride.', '06:45:09', '09:55:09'),
+(222, 40, 30.06323, 31.24702, NULL, 18, 'Hadayek Al-Ahram', 'Qesm Than Madinet Nasr, Cairo Governorate , Egypt', 'Bus Stop is located approximately 4.6 km from the city centre, which is approximately a 15 minute ride.', '06:55:09', '10:05:09'),
+(223, 40, 30.05845, 31.30233, 1, 19, 'El-Wahat Road', 'El-Tahrir Square, Abdeen, Cairo Governorate, Egypt', 'Bus Stop is located approximately 47 metres from the city centre, which is only a 1 minute walking distance so you can also reach it on foot.', '07:05:09', '10:15:09');
 
 -- --------------------------------------------------------
 
@@ -397,7 +418,8 @@ CREATE TABLE `trips` (
 --
 
 INSERT INTO `trips` (`id`, `name`, `vehicleIDGo`, `vehicleIDBack`, `driveridGo`, `driveridBack`, `startHGo`, `endHGo`, `startHBack`, `endHBack`, `price`, `description`, `goBack`, `status`) VALUES
-(23, 'lmklbmbvvmvmmvvvm', 6, 6, 4, 4, '04:05:09', '07:05:09', '19:15:09', '23:15:09', 10, 'this trip is a trip going from 6 october to Mostorod ', 1, 1);
+(23, 'lmklbmbvvmvmmvvvm', 6, 6, 4, 4, '04:05:09', '07:05:09', '19:15:09', '23:15:09', 10, 'this trip is a trip going from 6 october to Mostorod ', 1, 0),
+(40, 'lmklbmbvvmvmmvvvm', 7, 7, 4, 4, '04:05:09', '07:05:09', '07:15:09', '10:15:09', 10, 'this trip is a trip going from 6 october to Mostorod', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -414,10 +436,10 @@ CREATE TABLE `users` (
   `birthDate` date NOT NULL,
   `countryCode` varchar(4) NOT NULL,
   `homeAddress` varchar(255) DEFAULT NULL,
-  `workAddress` int(11) DEFAULT NULL,
+  `workAddress` varchar(255) DEFAULT NULL,
   `profile_image` varchar(255) NOT NULL DEFAULT '1698773559374-37408851.jpeg',
   `phone` varchar(255) NOT NULL,
-  `type` enum('admin','user','bus','') NOT NULL,
+  `type` enum('admin','user') NOT NULL,
   `counter` int(11) NOT NULL DEFAULT 0 COMMENT 'every user has 2 travels to the trip in the day as average',
   `token` varchar(255) NOT NULL,
   `deviceToken` varchar(255) DEFAULT NULL,
@@ -431,13 +453,16 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `nationalityID`, `userName`, `gender`, `specialNeeds`, `birthDate`, `countryCode`, `homeAddress`, `workAddress`, `profile_image`, `phone`, `type`, `counter`, `token`, `deviceToken`, `email`, `password`, `status`) VALUES
-(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '152', 152, '1696593211797-715622718.jpg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$72e32/9XKqzue/8oZzuXaurDhqoWyfY2l0cdsKj/iDtjqtS5vlJjK', 1),
-(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593328130-980953242.jpg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$m8qVIEp0dC9SoOFBC5JDjOvyMAkvV1it8TgpO.bjqaaLHg6HNv1pq', 1),
-(25, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593395318-874280431.jpg', '01223958292', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d77', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$gZw88nom4s/.aK0VvtftueYfWZ9XRXDuG63IFiGFjWCGRxtO8VE8O', 1),
-(26, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1696593688323-46490645.jpg', '01280151607', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
-(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', 152, '1698438896142-592115090.jpg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
-(33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '134', 152, '1698515946749-558071512.jpg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1),
-(34, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '137', 152, '1698519296014-731959160.jpg', '01280151678', 'user', 0, '5569463f742183f7a1f9453f239f38de', 'ijnn;ijiojijioji', 'romany195@gmail.com', '$2b$10$bv3WAgqsV2flbbNfy5ASFuIReAmFtQgQE1uMqglIsCQCWttccMVeG', 1);
+(6, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 'القاهره', '152', '1698773559374-37408851.jpeg', '01223958296', 'user', 18, 'e61a98907e17919b7c6903e5fc7b7013', 'ijnn;ijiojijioji', 'romany23@gmail.com', '$2b$10$1JwY6pimgLo6VNEOiesMAufBbZNAjD7bK8RYFhFJh6s5FaIw9r5t2', 1),
+(24, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', '152', '1698773559374-37408851.jpeg', '01223958298', 'user', 0, '0b5475da853a2420ed18c5ca3afc3d76', 'ijnn;ijiojijioji', 'romany1@gmail.com', '$2b$10$xQeqSZ4LECa75iVMcezMkeZ2V2Cdo4YFjo3KOu8qlz6UpiHGSewcq', 1),
+(26, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', 'home2', '152', '1698773559374-37408851.jpeg', '01223958988', 'admin', 0, 'a14a00637245aa516eae96dddb1ce175', '2fdb35aba2b3245cb108a1ee3fd46198', 'romany1981@gmail.com', '$2b$10$s8HJ/WeaP39jZ7EbMnPi8e2CEKvdwgBsEUdzPvnTjjGZ1gv9uKF/i', 1),
+(31, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '152', '152', '1698773559374-37408851.jpeg', '01280151667', 'user', 0, 'e657b7f593a9d27dc79680e561e442d3', NULL, 'romany194@gmail.com', '$2b$10$jGbTqr6bLewhD4unKh3VzegvnxbyT6doJziaZS8UvU3SQRhfc6F6m', 1),
+(33, 1, 'روماني عاطف عطيه', 1, 1, '2000-08-14', '+2', '134', '152', '1698773559374-37408851.jpeg', '01280151677', 'user', 0, 'bf7765c7895472599ac8940bffd63d00', NULL, 'romany135@gmail.com', '$2b$10$lFQOIgVM3.45IrdYtpFgvuySimdvhmM2E.yNpisz3ebNSf9U/FBuu', 1),
+(34, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', '137', '152', '1698773559374-37408851.jpeg', '01280151678', 'user', 0, '5569463f742183f7a1f9453f239f38de', 'ijnn;ijiojijioji', 'romany195@gmail.com', '$2b$10$bv3WAgqsV2flbbNfy5ASFuIReAmFtQgQE1uMqglIsCQCWttccMVeG', 1),
+(37, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 'القاهره', '152', '1698773559374-37408851.jpeg', '01280151699', 'admin', 0, '283c8128e6ee710c8b21a66cbda6fa2d', NULL, 'romany171@gmail.com', '$2b$10$JR1nGrWmxwNRrIR9CG1aPO/JqWo9B/6ywWoa9xkNidaEY4aLoolVK', 0),
+(39, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 'القاهره', '152', '1698773559374-37408851.jpeg', '01280151778', 'admin', 0, 'ba77593fe3ee0ec83f412d50a3ec3b6d', NULL, 'romany981@gmail.com', '$2b$10$hVuSdA/p/obkLU3VufoeBebmwHnuAVjlnMf9yy1mz0HOxIKt5PqAq', 1),
+(40, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 'home', '152', '1698773559374-37408851.jpeg', '01280151888', 'user', 0, '0bf14781e34a7115d9d333fe4040bcf3', NULL, 'romany198@gmail.com', '$2b$10$FMYuEe87QHijnynE6LdJculoKkX1XSrryI4Q71lYAdx4jMSIpzOyG', 1),
+(41, 1, 'روماني عاطف عطيه', 1, 0, '2000-08-14', '+2', 'home', 'work', '1698773559374-37408851.jpeg', '01280151849', 'admin', 0, '9ea380efaf3adcab90c882a7ee12fc9d', NULL, 'romany298@gmail.com', '$2b$10$xmf941jGTtZh0HLnnZecz.CN7s3gULHdAqaCYMmjwAuyTdenLcxkK', 1);
 
 -- --------------------------------------------------------
 
@@ -512,15 +537,17 @@ CREATE TABLE `vehicles` (
   `companyID` int(11) NOT NULL,
   `time` time NOT NULL,
   `locationlong` double NOT NULL,
-  `locationlat` double NOT NULL
+  `locationlat` double NOT NULL,
+  `status` int(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `vehicles`
 --
 
-INSERT INTO `vehicles` (`id`, `model`, `vehicleNum`, `seats`, `passengeersNum`, `vehiclecolorAR`, `vehiclecolorEN`, `companyID`, `time`, `locationlong`, `locationlat`) VALUES
-(6, 'toyota', 22323, 20, 1, 'اسود', 'black', 2, '00:00:00', 2323.2323, 2323.2323);
+INSERT INTO `vehicles` (`id`, `model`, `vehicleNum`, `seats`, `passengeersNum`, `vehiclecolorAR`, `vehiclecolorEN`, `companyID`, `time`, `locationlong`, `locationlat`, `status`) VALUES
+(6, 'toyota', 22323, 20, 1, 'اسود', 'black', 2, '00:00:00', 2323.2323, 2323.2323, 1),
+(7, 'toyota', 123123, 64, 0, 'ابيض', 'white', 2, '10:12:12', 32.2323, 76.23, 1);
 
 --
 -- Indexes for dumped tables
@@ -669,7 +696,7 @@ ALTER TABLE `vehicles`
 -- AUTO_INCREMENT for table `companies`
 --
 ALTER TABLE `companies`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `contactus`
@@ -693,7 +720,7 @@ ALTER TABLE `creditcard`
 -- AUTO_INCREMENT for table `driver`
 --
 ALTER TABLE `driver`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `externaltrips`
@@ -717,7 +744,7 @@ ALTER TABLE `inbox`
 -- AUTO_INCREMENT for table `maintenance`
 --
 ALTER TABLE `maintenance`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `nationalities`
@@ -729,7 +756,7 @@ ALTER TABLE `nationalities`
 -- AUTO_INCREMENT for table `otpstoring`
 --
 ALTER TABLE `otpstoring`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `privatetrip`
@@ -747,19 +774,19 @@ ALTER TABLE `qrcodes`
 -- AUTO_INCREMENT for table `stations`
 --
 ALTER TABLE `stations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=153;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=224;
 
 --
 -- AUTO_INCREMENT for table `trips`
 --
 ALTER TABLE `trips`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
 
 --
 -- AUTO_INCREMENT for table `userschedule`
@@ -777,7 +804,7 @@ ALTER TABLE `variety`
 -- AUTO_INCREMENT for table `vehicles`
 --
 ALTER TABLE `vehicles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
@@ -857,8 +884,7 @@ ALTER TABLE `trips`
 -- Constraints for table `users`
 --
 ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`nationalityID`) REFERENCES `nationalities` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `users_ibfk_4` FOREIGN KEY (`workAddress`) REFERENCES `stations` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`nationalityID`) REFERENCES `nationalities` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `userschedule`

@@ -91,26 +91,345 @@ async function updatevalue(masterkey, value) {
 async function deletevalue(masterkey) {
     await query("delete from otpstoring where masterkey=?", masterkey);
 }
-const validateHomeAddress = (value, { req }) => {
-    const { homeAddressLat, homeAddressLong } = req.body;
+// const validateHomeAddress = (value, { req }) => {
+//     const { homeAddressLat, homeAddressLong } = req.body;
 
-    if ((!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) || (parseFloat(homeAddressLat) < -85.05112878 || parseFloat(homeAddressLat) > 85.05112878 || parseFloat(homeAddressLong) < -180.0 || parseFloat(homeAddressLong) > 180.0)) {
+//     if ((!isFloat(homeAddressLat) || !isFloat(homeAddressLong)) || (parseFloat(homeAddressLat) < -85.05112878 || parseFloat(homeAddressLat) > 85.05112878 || parseFloat(homeAddressLong) < -180.0 || parseFloat(homeAddressLong) > 180.0)) {
         
-        throw new Error('validation.homeAddressNotExists2');
-    }
-    return true;
-};
-const validateWorkAddress = (value, { req }) => {
-    const { workAddressLat, workAddressLong } = req.body;
+//         throw new Error('validation.homeAddressNotExists2');
+//     }
+//     return true;
+// };
+// const validateWorkAddress = (value, { req }) => {
+//     const { workAddressLat, workAddressLong } = req.body;
 
-    if ((!isFloat(workAddressLat) || !isFloat(workAddressLong)) || (parseFloat(workAddressLat) < -85.05112878 || parseFloat(workAddressLat) > 85.05112878 || parseFloat(workAddressLong) < -180.0 || parseFloat(workAddressLong) > 180.0)) {
+//     if ((!isFloat(workAddressLat) || !isFloat(workAddressLong)) || (parseFloat(workAddressLat) < -85.05112878 || parseFloat(workAddressLat) > 85.05112878 || parseFloat(workAddressLong) < -180.0 || parseFloat(workAddressLong) > 180.0)) {
         
-        throw new Error('validation.workAddressNotExists');
-    }
-    return true;
-};
-//==========================================  send otp for registration ==========================================//
+//         throw new Error('validation.workAddressNotExists');
+//     }
+//     return true;
+// };
 
+
+//==========================================  Registeration  ==========================================//
+
+const registrationValidationRules = [
+    body('userName')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
+                throw new Error("validation.namelong2");
+            }
+            return true;
+        }),
+    body('homeAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+                throw new Error("validation.homeAddressNotExists");
+            }
+            return true;
+        }),
+    body('workAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+                throw new Error("validation.workAddressNotExists");
+            }
+            return true;
+        }),
+    // body('homeAddressLat').custom(validateHomeAddress),
+    // body('homeAddressLong').custom(validateHomeAddress),
+    // body('workAddressLat').custom(validateWorkAddress),
+    // body('workAddressLong').custom(validateWorkAddress),
+    // body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
+    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
+    body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
+    body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
+    body('email').isEmail().withMessage('validation.emailNotExists'),
+    body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
+    body('phone').isNumeric().withMessage('validation.phoneNotExists'),
+    body('type').notEmpty().withMessage('validation.typeNotExists'),
+];
+// async function encryptNumber(number,key) {
+//     const ciphertext = CryptoJS.AES.encrypt(number.toString(), key);
+//     return ciphertext.toString();
+// }
+router.post("/register", upload.single("image"),registerAuth, registrationValidationRules, async (req, res) => {// completed
+    try {
+        //============  Check if there are any validation errors ============
+        // if (!req.file) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: "",
+        //         data: {},
+        //         errors: { imageNotExists :req.t("error.imageNotExists")}
+        //     })
+        // }
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            if (req.file) {
+            fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
+            const translatedErrors = errors.array().map((error) => ({
+                [error.path]: req.t(error.msg)
+            }));
+
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: translatedErrors.reduce((result, current) => {
+                    return { ...result, ...current };
+                }, {})
+            });
+        }
+
+
+        //============ Extract data from the request body ============
+        const { email, password, phone, type, userName, nationalityID, homeAddress, workAddress, birthDate, gender, specialNeeds, conditions } = req.body;
+        const observer = {
+            status: true,
+            errors: {}
+        }
+
+
+
+        observer.errors.phone = [];
+        const countryCode = await query("select countryCode from nationalities where id=?", nationalityID)
+        if (!countryCode[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {
+                    nationality: req.t("error.noNationality")
+                }
+
+            })
+        }
+        const isValid2 = phoneNumber.isValidNumber(countryCode[0].countryCode + phone);
+        if (!(isValid2)) {
+            observer.status = false
+            observer.errors.phone.push(req.t("validation.phoneNotExists"))
+        }
+
+
+        //============ check email existes in users  ============
+        const emailexists = await query("select * from users where email = ?", email);
+        if (emailexists[0]) {
+            observer.status = false
+            observer.errors.email = req.t("error.emailExists")
+        }
+        //============ check nationality existes in nationalities  ============
+        const nationalityExists = await query("select * from nationalities where id = ?", nationalityID);
+        if (!nationalityExists[0]) {
+            observer.status = false
+            observer.errors.nationality = req.t("error.nationalityNotExists")
+        }
+        //============ check type  in users  ============|| type == "bus"
+        if (!(type == "admin" || type == "user" )) {
+            observer.status = false
+            observer.errors.type = req.t("validation.typeNotExists")
+        }
+        //============ check gender  ============
+        if (!(gender == 1 || gender == 0)) {
+            observer.status = false
+            observer.errors.gender = req.t("validation.genderNotExists")
+        }
+        //============ check terms and conditions  ============
+        if (!(conditions == 1)) {
+            observer.status = false
+            observer.errors.termsAndConditions = req.t("error.noAgreeTerms")
+        }
+        //============ check work adress station and conditions  ============
+        // const workAddressStation = await query("select * from stations where id=? AND startEnd=1",workAddress)
+        // if (!workAddressStation[0]) {
+        //     observer.status = false
+        //     observer.errors.workAddress = req.t("error.stationIDNOTExists")
+        // }
+        // //============ check home adress station and conditions  ============
+        // const homeAddressStation = await query("SELECT * FROM stations WHERE id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress));        console.log(homeAddressStation);
+        // if (!homeAddressStation[0]) {
+        //     observer.status = false 
+        //     observer.errors.homeAddress = req.t("error.stationIDNOTExists")
+        // }
+
+        //============ check phone existes in users  ============
+        const phoneExists = await query("select * from users where phone = ?", phone);
+
+        if (phoneExists[0]) {
+            observer.status = false;
+            observer.errors.phone.push(req.t("error.phoneExists"))
+
+        } else {
+            const phoneExists2 = await query(
+                "select * from users where phone = ?",
+                phone.toString().slice(2)
+            );
+
+            if (phoneExists2[0]) {
+                observer.status = false
+                observer.errors.phone.push(req.t("error.phoneExists"))
+            }
+        }
+
+
+        //============ check all errors   ============
+        if (!observer.status) {
+            if (observer.errors.phone && observer.errors.phone.length == 0) {
+                delete observer.errors.phone
+            }
+            if (observer.errors.phone && observer.errors.phone.length == 1) {
+                observer.errors.phone = observer.errors.phone[0]
+            }
+
+            if (req.file) {
+                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: {
+                    ...observer.errors,
+
+                }
+
+            })
+        }
+        
+        const pair = await checkExists(phone)
+        if (pair.status) {
+            if (req.file) {
+                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
+            }
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { otpWait :req.t("error.otpWait")},
+            });
+        }
+        // invalidOtp
+        // await redisClient.get(phone, async (err, storedOtp) => {
+        //     if (err) {
+        //         throw err
+        //     }
+        // });
+
+            // await deletevalue(phone);
+        
+            // ============ Return success response without password ============
+        const generatedOTP = await generateOTP();
+        // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
+
+        if (true) {
+
+            // redisClient.setEx(phone, 600, generatedOTP, (err) => {
+            //     if (err) {
+            //         return res.status(500).json({
+            //             status: false,
+            //             code: 500,
+            //             msg: "Internal server error sending otp",
+            //             data: {},
+            //             errors: { serverError: err },
+            //         });
+            //     }
+            // });
+
+            await insertvalue(phone, generatedOTP);
+            
+            const token = crypto.randomBytes(16).toString("hex") //to now is an admin or not and is loged or not 
+            const userData = {
+                userName: userName,
+                email: email,
+                password: await bcrypt.hash(password, 10),
+                token: token,
+                type: type,
+                phone: phone,
+                nationalityID: nationalityID,
+                // workAddressLong: workAddressLong,
+                // workAddressLat: workAddressLat,
+                // homeAddressLong: homeAddressLong,
+                // homeAddressLat: homeAddressLat,
+                workAddress: workAddress,
+                homeAddress: homeAddress,
+                // tripID: workAddressStation[0].tripID,
+                birthDate: birthDate,
+                gender: gender,
+                specialNeeds: specialNeeds || 0,
+                countryCode: countryCode[0].countryCode,
+            }
+            if (req.file) {
+                userData.profile_image= req.file.filename
+            }
+            // if (type=="admin") {
+            //     userData.status=1
+            // }
+            await query("insert into users set ?", userData);
+            // if (type == "admin") {
+            //     res.status(200).json({
+            //         status: true,
+            //         code: 200,
+            //         msg: req.t("sendOtp") + "  :" + generatedOTP + "  , " + req.t("register"),
+            //         data: {},
+            //         errors: {},
+            //     });
+            // } else {
+                res.status(200).json({
+                status: true,
+                code: 200,
+                msg: req.t("sendOtp") + "  :" + generatedOTP +"  , "+req.t("register"),
+                data: { token: token },
+                errors: {},
+            });
+            // }
+                                                                                                                            
+        
+            
+            setTimeout(async () => {
+                await deletevalue(phone);
+            }, 10 * 60000);
+            return;
+        }
+            // return res.status(200).json({
+            //     status: true,
+            //     code: 200,
+            //     msg: req.t("register"),
+            //     data: {},
+            //     errors: {}
+
+            // })
+        // else {
+        //     fs.unlinkSync("./upload/" + req.file.filename); //delete image
+
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: req.t("error.invalidOtp"),
+        //         data: {},
+        //         errors: {},
+        //     });
+        // }
+
+
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err }
+
+        });
+
+    }
+});
+//==========================================  confirm otp for registration ==========================================//
 const otpValidationRules = [
     body('otp')
         .custom((value, { req }) => {
@@ -119,7 +438,6 @@ const otpValidationRules = [
             }
             return true;
         }),];
-
 router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) => {//completed
     try {
         const errors = validationResult(req);
@@ -193,314 +511,12 @@ router.post("/confirmotp", Notautherized, otpValidationRules, async (req, res) =
     }
 }
 );
-
-
-//==========================================  Registeration  ==========================================//
-
-const registrationValidationRules = [
-    body('userName')
-        .custom((value, { req }) => {
-            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 13 || value.length >= 29) {
-                throw new Error("validation.namelong2");
-            }
-            return true;
-        }),
-    body('homeAddress')
-        .custom((value, { req }) => {
-            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
-                throw new Error("validation.homeAddressNotExists");
-            }
-            return true;
-        }),
-    // body('homeAddressLat').custom(validateHomeAddress),
-    // body('homeAddressLong').custom(validateHomeAddress),
-    // body('workAddressLat').custom(validateWorkAddress),
-    // body('workAddressLong').custom(validateWorkAddress),
-    body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
-    body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
-    body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
-    body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
-    body('email').isEmail().withMessage('validation.emailNotExists'),
-    body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
-    body('phone').isNumeric().withMessage('validation.phoneNotExists'),
-    body('type').notEmpty().withMessage('validation.typeNotExists'),
-];
-// async function encryptNumber(number,key) {
-//     const ciphertext = CryptoJS.AES.encrypt(number.toString(), key);
-//     return ciphertext.toString();
-// }
-
-
-
-router.post("/register", upload.single("image"), registerAuth, registrationValidationRules, async (req, res) => {// completed
-    try {
-        //============  Check if there are any validation errors ============
-        // if (!req.file) {
-        //     return res.status(400).json({
-        //         status: false,
-        //         code: 400,
-        //         msg: "",
-        //         data: {},
-        //         errors: { imageNotExists :req.t("error.imageNotExists")}
-        //     })
-        // }
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            if (req.file) {
-            fs.unlinkSync("./upload/" + req.file.filename); //delete image          
-            }
-
-            const errorlink = errors.array()
-            const translatedErrors = errors.array().map((error) => ({
-                [error.path]: req.t(error.msg)
-            }));
-
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: "",
-                data: {},
-                errors: translatedErrors.reduce((result, current) => {
-                    return { ...result, ...current };
-                }, {})
-            });
-        }
-
-
-        //============ Extract data from the request body ============
-        const { otp, email, password, phone, type, userName, nationalityID, homeAddress, workAddress, birthDate, gender, specialNeeds, conditions } = req.body;
-        const observer = {
-            status: true,
-            errors: {}
-        }
-
-
-
-        observer.errors.phone = [];
-        const countryCode = await query("select countryCode from nationalities where id=?", nationalityID)
-        if (!countryCode[0]) {
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: "",
-                data: {},
-                errors: {
-                    nationality: req.t("error.noNationality")
-                }
-
-            })
-        }
-        const isValid2 = phoneNumber.isValidNumber(countryCode[0].countryCode + phone);
-        if (!(isValid2)) {
-            observer.status = false
-            observer.errors.phone.push(req.t("validation.phoneNotExists"))
-        }
-
-
-        //============ check email existes in users  ============
-        const emailexists = await query("select * from users where email = ?", email);
-        if (emailexists[0]) {
-            observer.status = false
-            observer.errors.email = req.t("error.emailExists")
-        }
-        //============ check nationality existes in nationalities  ============
-        const nationalityExists = await query("select * from nationalities where id = ?", nationalityID);
-        if (!nationalityExists[0]) {
-            observer.status = false
-            observer.errors.nationality = req.t("error.nationalityNotExists")
-        }
-        //============ check type  in users  ============|| type == "bus"
-        if (!(type == "admin" || type == "user" )) {
-            observer.status = false
-            observer.errors.type = req.t("validation.typeNotExists")
-        }
-        //============ check gender  ============
-        if (!(gender == 1 || gender == 0)) {
-            observer.status = false
-            observer.errors.gender = req.t("validation.genderNotExists")
-        }
-        //============ check terms and conditions  ============
-        if (!(conditions == 1)) {
-            observer.status = false
-            observer.errors.termsAndConditions = req.t("error.noAgreeTerms")
-        }
-        //============ check work adress station and conditions  ============
-        const workAddressStation = await query("select * from stations where id=? AND startEnd=1",workAddress)
-        if (!workAddressStation[0]) {
-            observer.status = false
-            observer.errors.workAddress = req.t("error.stationIDNOTExists")
-        }
-        // //============ check home adress station and conditions  ============
-        // const homeAddressStation = await query("SELECT * FROM stations WHERE id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress));        console.log(homeAddressStation);
-        // if (!homeAddressStation[0]) {
-        //     observer.status = false 
-        //     observer.errors.homeAddress = req.t("error.stationIDNOTExists")
-        // }
-
-        //============ check phone existes in users  ============
-        const phoneExists = await query("select * from users where phone = ?", phone);
-
-        if (phoneExists[0]) {
-            observer.status = false;
-            observer.errors.phone.push(req.t("error.phoneExists"))
-
-        } else {
-            const phoneExists2 = await query(
-                "select * from users where phone = ?",
-                phone.toString().slice(2)
-            );
-
-            if (phoneExists2[0]) {
-                observer.status = false
-                observer.errors.phone.push(req.t("error.phoneExists"))
-            }
-        }
-
-
-        //============ check all errors   ============
-        if (!observer.status) {
-            if (observer.errors.phone.length == 0) {
-                delete observer.errors.phone
-            }
-            if (observer.errors.phone.length == 1) {
-                observer.errors.phone = observer.errors.phone[0]
-            }
-
-            if (req.file) {
-                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
-            }
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: "",
-                data: {},
-                errors: {
-                    ...observer.errors,
-
-                }
-
-            })
-        }
-        
-        const pair = await checkExists(phone)
-        if (pair.status) {
-            if (req.file) {
-                fs.unlinkSync("./upload/" + req.file.filename); //delete image          
-            }
-            return res.status(400).json({
-                status: false,
-                code: 400,
-                msg: "",
-                data: {},
-                errors: { otpWait :req.t("error.otpWait")},
-            });
-        }
-        // invalidOtp
-        // await redisClient.get(phone, async (err, storedOtp) => {
-        //     if (err) {
-        //         throw err
-        //     }
-        // });
-
-            // await deletevalue(phone);
-        
-            // ============ Return success response without password ============
-        const generatedOTP = await generateOTP();
-        // sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
-
-        if (true) {
-
-            // redisClient.setEx(phone, 600, generatedOTP, (err) => {
-            //     if (err) {
-            //         return res.status(500).json({
-            //             status: false,
-            //             code: 500,
-            //             msg: "Internal server error sending otp",
-            //             data: {},
-            //             errors: { serverError: err },
-            //         });
-            //     }
-            // });
-
-            await insertvalue(phone, generatedOTP);
-            
-            const token = crypto.randomBytes(16).toString("hex") //to now is an admin or not and is loged or not 
-            const userData = {
-                userName: userName,
-                email: email,
-                password: await bcrypt.hash(password, 10),
-                token: token,
-                type: type,
-                phone: phone,
-                profile_image: req.file.filename,
-                nationalityID: nationalityID,
-                // workAddressLong: workAddressLong,
-                // workAddressLat: workAddressLat,
-                // homeAddressLong: homeAddressLong,
-                // homeAddressLat: homeAddressLat,
-                workAddress: workAddress,
-                homeAddress: homeAddress,
-                // tripID: workAddressStation[0].tripID,
-                birthDate: birthDate,
-                gender: gender,
-                specialNeeds: specialNeeds || 0,
-                countryCode: countryCode[0].countryCode,
-            }
-            await query("insert into users set ?", userData);
-            res.status(200).json({
-                status: true,
-                code: 200,
-                msg: req.t("sendOtp") + "  :" + generatedOTP +"  , "+req.t("register"),
-                data: { token: token },
-                errors: {},
-            });
-            setTimeout(async () => {
-                await deletevalue(phone);
-            }, 10 * 60000);
-            return;
-        }
-            // return res.status(200).json({
-            //     status: true,
-            //     code: 200,
-            //     msg: req.t("register"),
-            //     data: {},
-            //     errors: {}
-
-            // })
-        // else {
-        //     fs.unlinkSync("./upload/" + req.file.filename); //delete image
-
-        //     return res.status(400).json({
-        //         status: false,
-        //         code: 400,
-        //         msg: req.t("error.invalidOtp"),
-        //         data: {},
-        //         errors: {},
-        //     });
-        // }
-
-
-    } catch (err) {
-        console.log(err);
-        return res.status(500).json({
-            status: false,
-            code: 500,
-            msg: "",
-            data: {},
-            errors: { serverError: err }
-
-        });
-
-    }
-});
-
 //========================================== LOGIN ==========================================//
 // the type of login api is post not get for security reasons
 const loginValidationRules = [body('email').isEmail().withMessage('validation.emailNotExists'),
 body('type').notEmpty().withMessage('validation.typeNotExists'),
 body('password').isLength({ min: 8, max: 25 }).withMessage('validation.passwordNotExists'),
 ];
-
 router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {// completed
     try {
         //============ Extract data from the request body ============
@@ -568,9 +584,8 @@ router.post("/login", loginValidationRules, userAuthlog, async (req, res) => {//
     }
 });
 
-const passValidationRules = [body('phone').isString().withMessage("validation.phoneNotExists")];
-
 //================================= FORGET PASSWORD =================================//
+const passValidationRules = [body('phone').isString().withMessage("validation.phoneNotExists")];
 router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
     try {
         const errors = validationResult(req);
@@ -646,7 +661,6 @@ router.post("/sendotpass", passValidationRules, async (req, res) => {//completed
         });
     }
 });
-
 
 //============ conferm otp for pasword editing ==============//
 const passValidationRules2 = [
@@ -834,11 +848,18 @@ const registrationValidationRules2 = [
             }
             return true;
         }),
+    body('workAddress')
+        .custom((value, { req }) => {
+            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
+                throw new Error("validation.workAddressNotExists");
+            }
+            return true;
+        }),
     // body('homeAddressLat').custom(validateHomeAddress),
     // body('homeAddressLong').custom(validateHomeAddress),
     // body('workAddressLat').custom(validateWorkAddress),
     // body('workAddressLong').custom(validateWorkAddress),
-    body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
+    // body('workAddress').isNumeric().withMessage('validation.workAddressNotExists'),
     body('nationalityID').isNumeric().withMessage('validation.nationalityIDNotExists'),
     body('birthDate').isISO8601().withMessage('validation.birthDateNotExists'),
     body('specialNeeds').isNumeric().withMessage('validation.specialNeedsNotExists'),
@@ -940,11 +961,11 @@ router.post("/editProfile", upload.single("image"),registrationValidationRules2,
             observer.errors.nationality = req.t("error.nationalityNotExists")
         }
         //============ check work adress station and conditions  ============
-        const workAddressStation = await query("select * from stations where id=? AND startEnd=1",parseInt(workAddress))
-        if (!workAddressStation[0]) {
-            observer.status = false
-            observer.errors.workAddress = req.t("error.stationIDNOTExists")
-        }
+        // const workAddressStation = await query("select * from stations where id=? AND startEnd=1",parseInt(workAddress))
+        // if (!workAddressStation[0]) {
+        //     observer.status = false
+        //     observer.errors.workAddress = req.t("error.stationIDNOTExists")
+        // }
         // //============ check home adress station and conditions  ============
         // const homeAddressStation = await query("select * from stations where id=? AND (startEnd IS NULL OR startEnd = 0)", parseInt(homeAddress))
         // if (!homeAddressStation[0]) {
@@ -976,13 +997,13 @@ router.post("/editProfile", upload.single("image"),registrationValidationRules2,
 
         //============ check all errors   ============
         if (!observer.status) {
-            if (observer.errors.phone.length == 0) {
+            if (observer.errors.phone && observer.errors.phone.length == 0) {
                 delete observer.errors.phone
             }
-            if (observer.errors.phone.length == 1) {
+            if (observer.errors.phone && observer.errors.phone.length == 1) {
                 observer.errors.phone = observer.errors.phone[0]
             }
-            if (req.file) {
+            if (imageExists) {
                 fs.unlinkSync("./upload/" + req.file.filename); //delete image
             }
             return res.status(400).json({
@@ -1008,7 +1029,7 @@ router.post("/editProfile", upload.single("image"),registrationValidationRules2,
             countryCode: countryCode[0].countryCode
         }
 
-        if (req.file) {
+        if (imageExists) {
             userData.profile_image = req.file.filename
         }
         if (statusex == 0) {
@@ -1058,7 +1079,9 @@ router.post("/editProfile", upload.single("image"),registrationValidationRules2,
                 await insertvalue(phone, generatedOTP);
                 // console.log(await query("select * from otpstoring where masterkey=?",phone));
                 if (imageExists) {
-                    fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+                    if (!(autherized.profile_image == "1698773559374-37408851.jpeg")) {
+                        fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+                    }
                 }
                 //******************** */ sendOTP(`الرقم سري هو ${generatedOTP}`, phone)
 
@@ -1128,7 +1151,9 @@ router.post("/editProfile", upload.single("image"),registrationValidationRules2,
         //     }
         // }
         if (imageExists) {
-            fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+            if (!(autherized.profile_image == "1698773559374-37408851.jpeg")) {
+                fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+            }
         }
 
         await query("update users set ? where id=?", [userData, autherized.id]);
@@ -1160,7 +1185,7 @@ const confirmValidationRules = [
             }
             return true;
         }),
-    body('email').isEmail().withMessage('validation.emailNotExists'),
+    // body('email').isEmail().withMessage('validation.emailNotExists'),
     body('phone').isNumeric().withMessage('validation.phoneNotExists'),
     body('nationalityID').isNumeric().withMessage('validation.countryCodeNotExists'),
     body('statusex').isNumeric().withMessage('validation.statusNotExists'),
@@ -1170,7 +1195,7 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
         const autherized = res.locals.autherized;
 // email
-        //============ Extract data from the request body ============
+        //============ Extract data from the request body ============ 
         const { otp , phone, nationalityID, statusex } = req.body;
         const observer = {
             status: true,
@@ -1250,10 +1275,10 @@ router.post("/confirmedit", autherized, confirmValidationRules, async (req, res)
 
         //============ check all errors   ============
         if (!observer.status) {
-            if (observer.errors.phone.length == 0) {
+            if (observer.errors.phone && observer.errors.phone.length == 0) {
                 delete observer.errors.phone
             }
-            if (observer.errors.phone.length == 1) {
+            if (observer.errors.phone && observer.errors.phone.length == 1) {
                 observer.errors.phone = observer.errors.phone[0]
             }
             return res.status(400).json({

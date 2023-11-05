@@ -84,7 +84,7 @@ app.use("/auth", Auth);
 app.use("/user", userservices);
 app.use("/conditions", termsAndConditions);
 app.use("/fqa", fqa);
-app.use("/contactus", contactus);
+app.use("/contactus", contactus.router6);
 app.use("/linkservices", linkservices);
 app.use("/nationality", nationality);
 app.use("/adminServices", adminServices.router6);
@@ -226,48 +226,48 @@ const getuser = async () => {
 // const user =await query ("select * from users where id=34")
 //*********************************************************************
 
-cron.schedule(`* * * * *`, async () => {//test//update trip status
-    const trips = await query("select * from trips");
-    const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
-    const time = (await query("select time from variety where id=2"))[0].time
+// cron.schedule(`* * * * *`, async () => {//test//update trip status
+//     const trips = await query("select * from trips");
+//     const currentTime = moment.tz('Africa/Cairo').format("HH:mm:ss")
+//     const time = (await query("select time from variety where id=2"))[0].time
 
-    await Promise.all(trips.map(async trip => {
-        const tripStartHBack = moment(new Date(new Date().setHours(...trip.startHBack.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
-        const tripEndHBack = moment(new Date(new Date().setHours(...trip.endHBack.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
-        const tripStartHGo = moment(new Date(new Date().setHours(...trip.startHGo.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
-        const tripEndHGo = moment(new Date(new Date().setHours(...trip.endHGo.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
-        const going = (currentTime >= tripStartHGo && currentTime < tripEndHGo)  
-        const back = (currentTime >= tripStartHBack && currentTime < tripEndHBack)
-        if (going) {
-            const updatestatus = {
-                status:1,
-                goBack:0
-            }
-            await query("update trips set ? where id=?", [updatestatus,trip.id])                
-            const tripStartHGoadd5 = moment(tripStartTime).subtract(time, 'minutes').format("HH:mm:ss");
-            if (moment(currentTime, "HH:mm:ss").isBefore(tripStartHGoadd5, "HH:mm:ss")) {
-                const users3 = await query("select * from userschedule where date =? AND tripID=?", [currentTime, trip.id]);
-                const user = await query("select deviceToken from users where id=?", users3[0].userID)
-                await Promise.all(users3.map((user) => {
-                    // sendnotification(req.t("info"), req.t("busarrive5"), user[0].deviceToken)
-                    console.log("sent");
-                }))
-            }
-            return;
-        }
+//     await Promise.all(trips.map(async trip => {
+//         const tripStartHBack = moment(new Date(new Date().setHours(...trip.startHBack.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
+//         const tripEndHBack = moment(new Date(new Date().setHours(...trip.endHBack.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
+//         const tripStartHGo = moment(new Date(new Date().setHours(...trip.startHGo.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
+//         const tripEndHGo = moment(new Date(new Date().setHours(...trip.endHGo.toString().split(':')))).tz('Africa/Cairo').format("HH:mm:ss")
+//         const going = (currentTime >= tripStartHGo && currentTime < tripEndHGo)  
+//         const back = (currentTime >= tripStartHBack && currentTime < tripEndHBack)
+//         if (going) {
+//             const updatestatus = {
+//                 status:1,
+//                 goBack:0
+//             }
+//             await query("update trips set ? where id=?", [updatestatus,trip.id])                
+//             const tripStartHGoadd5 = moment(tripStartTime).subtract(time, 'minutes').format("HH:mm:ss");
+//             if (moment(currentTime, "HH:mm:ss").isBefore(tripStartHGoadd5, "HH:mm:ss")) {
+//                 const users3 = await query("select * from userschedule where date =? AND tripID=?", [currentTime, trip.id]);
+//                 const user = await query("select deviceToken from users where id=?", users3[0].userID)
+//                 await Promise.all(users3.map((user) => {
+//                     // sendnotification(req.t("info"), req.t("busarrive5"), user[0].deviceToken)
+//                     console.log("sent");
+//                 }))
+//             }
+//             return;
+//         }
 
-        if (back) {
-            const updatestatus = {
-                status:1,
-                goBack:1
-            }
-            await query("update trips set ? where id=?", [updatestatus, trip.id])
-            return
-        } 
-        await query("update trips set status=0 where id=?", trip.id) 
-    }))
+//         if (back) {
+//             const updatestatus = {
+//                 status:1,
+//                 goBack:1
+//             }
+//             await query("update trips set ? where id=?", [updatestatus, trip.id])
+//             return
+//         } 
+//         await query("update trips set status=0 where id=?", trip.id) 
+//     }))
 
-});
+// });
 //**************************************************************************
 
 

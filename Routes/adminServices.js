@@ -42,16 +42,16 @@ const paginatedResults2 = async (tableName, page, limit) => {
 
     return userData;
 };
+
 const paginatedResults = async (tableName, page, limit) => {
     const startIndex = (page - 1) * limit;
-    const user = "user";
-    const query2 = `select * from ${tableName} where type = ? limit ? offset ?`;
-    const result = await query(query2, [user, (limit + 1), startIndex]);
+    const query2 = `select * from ${tableName} where type ='user' limit ? offset ?`;
+    const result = await query(query2, [(limit + 1), startIndex]);
     const userData = {
         result: result,
         statusPrevious: true,
         statusNext: true,
-        numRecords: (await query(`select count(*) as countusers from ${tableName} where type=${user}`))[0].countusers
+        numRecords: (await query(`select count(*) as countusers from ${tableName} where type='user'`))[0].countusers
     }
     if (!(result.length == limit + 1)) {
         userData.statusNext = false
@@ -68,7 +68,6 @@ const paginatedResults = async (tableName, page, limit) => {
 
     return userData;
 };
-
 //========================== get user by id==========================//
 
 router6.get("/userdata", adminAuth, async (req, res) => {//completed4
@@ -84,7 +83,7 @@ router6.get("/userdata", adminAuth, async (req, res) => {//completed4
             });
         }
 
-        const data = await query("select * from users where id=?", id);
+        const data = await query("select * from users where id=? AND type='user'", id);
         if (!data[0]) {
             return res.status(400).json({
                 status: false,
@@ -95,9 +94,10 @@ router6.get("/userdata", adminAuth, async (req, res) => {//completed4
             });
         }
         delete data[0].password;
-        delete data[0].password;
         data[0].phone = data[0].countryCode + data[0].phone
         delete data[0].type;
+        delete data[0].deviceToken;
+        delete data[0].counter;
 
         if (data[0].gender == 1) {
             data[0].gender = req.t("male")
@@ -269,6 +269,8 @@ router6.get("/viewusers", adminAuth, async (req, res) => {//completed4
             delete elemn.countryCode;
             const host = req.get('host');
             elemn.profile_image = `http://${host}/upload/${elemn.profile_image} `
+            delete elemn.deviceToken
+            delete elemn.counter
 
         };
         await Promise.all(data.result.map(fun))
@@ -318,7 +320,7 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
             });
         }
 
-        const usere = await query("select * from users where id= ?", id);
+        const usere = await query("select * from users where id= ? AND type='user'", id);
         if (!usere[0]) {
             return res.status(404).json({
                 status: false,
@@ -336,14 +338,14 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
                         code: 400,
                         msg: "",
                         data: {},
-                        errors: { userActivated: req.t("error.userActivated") },
+                        errors: { userAlreadyActivated: req.t("error.userAlreadyActivated") },
                     });
                 }
-                await query("update users set status = 1 where id =? ", id);
+                await query("update users set status = 1 where id =? AND type='user' ", id);
                 return res.status(200).json({
                     status: true,
                     code: 200,
-                    msg: req.t("userActivate"),
+                    msg: req.t("userActivated"),
                     data: {},
                     errors: {},
                 });
@@ -355,14 +357,14 @@ router6.post("/userstate", adminAuth, async (req, res) => {//completed4
                             code: 400,
                             msg: "",
                             data: {},
-                            errors: { userInactivated :req.t("error.userInactivated")},
+                            errors: { userAlreadyInactivated: req.t("error.userAlreadyInactivated")},
                         });
                     }
                     await query("update users set status = 0 where id =? ", id);
                     return res.status(200).json({
                         status: true,
                         code: 200,
-                        msg: req.t("userInactivate"),
+                        msg: req.t("userInactivated"),
                         data: {},
                         errors: {},
                     });
@@ -682,21 +684,26 @@ router6.delete("/deleteProfile", adminAuth, async (req, res) => {//completed
                 code: 400,
                 msg: "",
                 data: {},
-                errors: { userIDNOTExistsID :req.t("error.userIDNOTExistsID")},
+                errors: { userIDNOTExists: req.t("error.userIDNOTExists")},
             });
         }
-        checkExistss = await query("select * from users where id=?", id);
+        checkExistss = await query("select * from users where id=? AND type='user'", id);
         if (!checkExistss[0]) {
             return res.status(400).json({
                 status: false,
                 code: 400,
                 msg:"" ,
                 data: {},
-                errors: { noUser :req.t("error.noUser")},
+                errors: { userIDNOTExists: req.t("error.userIDNOTExists")},
             });
         }
-        await query("delete from users where id = ? ", id)
-        deleteFileIfExists("./upload/" + checkExistss[0].profile_image)
+        // await query("delete from users where id = ? ", id)
+        if (!(checkExistss[0].profile_image == "1698773559374-37408851.jpeg")) {
+            fs.unlinkSync("./upload/" + checkExistss[0].profile_image); //delete image
+        }
+        // else {
+        // deleteFileIfExists("./upload/" + checkExistss[0].profile_image)
+        // }
         // fs.unlinkSync("./upload/" + checkExistss[0].profile_image); //delete image
 
         return res.status(200).json({
@@ -1001,7 +1008,6 @@ router6.post("/createcompany", companyValidationRules, adminAuth, async (req, re
     }
 });
 // =============================================== view companies ======================================
-
 router6.get("/companies", adminAuth, async (req, res) => {//complete
     try {
         const companyExists = await query("select * from companies")
@@ -1067,6 +1073,25 @@ router6.get("/vehicless", adminAuth, async (req, res) => {//complete
                 errors: { novehicles :req.t("error.novehicles")}
             });
         }
+        await Promise.all(vehicles.map(async (e) => {
+            e.currentPassengeersNum = e.passengeersNum
+            delete e.passengeersNum
+            delete e.companyID
+            if (e.status == 1) {
+                e.status = req.t("active")
+            } else {
+                e.status = req.t("inactive")
+            }
+            if (req.headers['accept-language'] = "ar") {
+                delete e.vehiclecolorEN
+                e.vehiclecolor = e.vehiclecolorAR;
+                delete e.vehiclecolorAR
+            } else {
+                delete e.vehiclecolorAR
+                e.vehiclecolor = e.vehiclecolorEN;
+                delete e.vehiclecolorEN
+            }
+        }))
         return res.status(200).json({
             status: true,
             code: 200,
@@ -1077,6 +1102,239 @@ router6.get("/vehicless", adminAuth, async (req, res) => {//complete
         })
 
     } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//============================== get all vehicle===========================
+router6.get("/drivers", adminAuth, async (req, res) => {//complete
+    try {
+        const { page, limit } = req.query;
+        if (!(Boolean(limit) && Boolean(page))) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { limitPage: req.t("error.limitPage") },
+            });
+        }
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+        const drivers = await paginatedResults2("driver", pageNumber, limitNumber)
+        // const vehicles = await query("select * from driver")
+        if (!drivers.result[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { noDrivers: req.t("error.noDrivers") },
+            });
+        }
+        // if (!vehicles[0]) {
+        //     return res.status(400).json({
+        //         status: false,
+        //         code: 400,
+        //         msg: "",
+        //         data: {},
+        //         errors: { novehicles: req.t("error.noDrivers") },
+        //     });
+        // }
+        const host = req.get('host');
+        drivers.result.map((e) => {
+            delete e.password
+            delete e.token
+            delete e.password
+            if (e.gender == 1) {
+                e.gender = req.t("male")
+            } else {
+                e.gender = req.t("female")
+            }
+            if (e.status == 1) {
+                e.status = req.t("active")
+            } else {
+                e.status = req.t("inactive")
+            }
+            e.profile_image = `http://${host}/upload/${e.profile_image} `
+            e.passport = `http://${host}/upload/${e.passport} `
+            e.residenceVisa = `http://${host}/upload/${e.residenceVisa} `
+            e.drivingLicense = `http://${host}/upload/${e.drivingLicense} `
+            e.carLicense = `http://${host}/upload/${e.carLicense} `
+            e.tradeLicense = `http://${host}/upload/${e.tradeLicense} `
+        })
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: drivers,
+            errors: {},
+        });
+} catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//============================== get all drivers ids with the nme  ===========================
+router6.get("/drivers2", adminAuth, async (req, res) => {//complete
+    try {
+        const drivers = await query("select id, fullName from driver where status=1")
+        if (!drivers[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { noDrivers: req.t("error.noDrivers") },
+            });
+        }
+        // const drivers2 = drivers.map(e=>e.id)
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: drivers,
+            errors: {},
+        });
+} catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//================================= set in-Active driver to active state or inactive =================================//
+router6.post("/driverstate", adminAuth, async (req, res) => {//completed4
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { noDriver: req.t("error.noDriver") },
+            });
+        }
+        const { operation } = req.query;
+        if (!operation) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { invalidOperation: req.t("error.invalidOperation") },
+            });
+        }
+
+        const driver = await query("select * from driver where id= ?", id);
+        if (!driver[0]) {
+            return res.status(404).json({
+                status: false,
+                code: 404,
+                msg: "",
+                data: {},
+                errors: { noDriver :req.t("error.noDriver")},
+            });
+        }
+        else {
+            if (operation == 1) {
+                if (driver[0].status == 1) {
+                    return res.status(400).json({
+                        status: false,
+                        code: 400,
+                        msg: "",
+                        data: {},
+                        errors: { driverAlreadyActivated: req.t("error.driverAlreadyActivated") },
+                    });
+                }
+                await query("update driver set status = 1 where id =? ", id);
+                return res.status(200).json({
+                    status: true,
+                    code: 200,
+                    msg: req.t("driverActivated"),
+                    data: {},
+                    errors: {},
+                });
+            } else {
+                if (operation == 0) {
+                    if (driver[0].status == 0) {
+                        return res.status(400).json({
+                            status: false,
+                            code: 400,
+                            msg: "",
+                            data: {},
+                            errors: { userAlreadyInactivated: req.t("error.userAlreadyInactivated") },
+                        });
+                    }
+                    await query("update driver set status = 0 where id =? ", id);
+                    return res.status(200).json({
+                        status: true,
+                        code: 200,
+                        msg: req.t("driverInactivated"),
+                        data: {},
+                        errors: {},
+                    });
+                } else {
+                    return res.status(400).json({
+                        status: false,
+                        code: 400,
+                        msg: "",
+                        data: {},
+                        errors: { invalidOperation: req.t("error.invalidOperation") },
+                    });
+                }
+            }
+        }
+
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
+//============================== get all drivers ids with the model and number===========================
+router6.get("/vehicles2", adminAuth, async (req, res) => {//complete
+    try {
+        const vehicles = await query("select id,model,vehicleNum,seats from vehicles where status=1")
+        if (!vehicles[0]) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { novehicles: req.t("error.novehicles") },
+            });
+        }
+        // const vehicles2=  vehicles.map(e=>e.id)
+        return res.status(200).json({
+            status: true,
+            code: 200,
+            msg: "",
+            data: vehicles,
+            errors: {},
+        });
+} catch (err) {
         console.log(err);
         return res.status(500).json({
             status: false,
@@ -1112,6 +1370,26 @@ router6.get("/vehicles", adminAuth, async (req, res) => {//complete
                 errors: { novehicles: req.t("error.novehicles") },
             });
         }
+        await Promise.all(vehicles.result.map(async (e) => {
+            e.currentPassengeersNum = e.passengeersNum
+            delete e.passengeersNum
+            e.companyName = (await query("select companyName from companies where id=?", e.companyID))[0].companyName
+                delete e.companyID
+            if (e.status == 1) {
+                e.status = req.t("active")
+            } else {
+                e.status = req.t("inactive")
+            }
+            if (req.headers['accept-language'] = "ar") {
+                delete e.vehiclecolorEN
+                e.vehiclecolor = e.vehiclecolorAR;
+                delete e.vehiclecolorAR
+            } else {
+                delete e.vehiclecolorAR
+                e.vehiclecolor = e.vehiclecolorEN;
+                delete e.vehiclecolorEN
+            }
+        }))
         // const user1 = res.locals.user;
         return res.status(200).json({
             status: true,
@@ -1131,17 +1409,103 @@ router6.get("/vehicles", adminAuth, async (req, res) => {//complete
         });
     }
 });
+//================================= set in-Active driver to active state or inactive =================================//
+router6.post("/vehiclestate", adminAuth, async (req, res) => {//completed4
+    try {
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { novehicleID: req.t("validation.novehicleID") },
+            });
+        }
+        const { operation } = req.query;
+        if (!operation) {
+            return res.status(400).json({
+                status: false,
+                code: 400,
+                msg: "",
+                data: {},
+                errors: { invalidOperation: req.t("error.invalidOperation") },
+            });
+        }
 
+        const vehicles = await query("select * from vehicles where id= ?", id);
+        if (!vehicles[0]) {
+            return res.status(404).json({
+                status: false,
+                code: 404,
+                msg: "",
+                data: {},
+                errors: { noDriver: req.t("error.novehicle") },
+            });
+        }
+        else {
+            if (operation == 1) {
+                if (vehicles[0].status == 1) {
+                    return res.status(400).json({
+                        status: false,
+                        code: 400,
+                        msg: "",
+                        data: {},
+                        errors: { vehicleAlreadyActivated: req.t("error.vehicleAlreadyActivated") },
+                    });
+                }
+                await query("update vehicles set status = 1 where id =? ", id);
+                return res.status(200).json({
+                    status: true,
+                    code: 200,
+                    msg: req.t("vehicleActivated"),
+                    data: {},
+                    errors: {},
+                });
+            } else {
+                if (operation == 0) {
+                    if (vehicles[0].status == 0) {
+                        return res.status(400).json({
+                            status: false,
+                            code: 400,
+                            msg: "",
+                            data: {},
+                            errors: { vehicleAlreadyInactivated: req.t("error.vehicleAlreadyInactivated") },
+                        });
+                    }
+                    await query("update vehicles set status = 0 where id =? ", id);
+                    return res.status(200).json({
+                        status: true,
+                        code: 200,
+                        msg: req.t("vehicleInactivated"),
+                        data: {},
+                        errors: {},
+                    });
+                } else {
+                    return res.status(400).json({
+                        status: false,
+                        code: 400,
+                        msg: "",
+                        data: {},
+                        errors: { invalidOperation: req.t("error.invalidOperation") },
+                    });
+                }
+            }
+        }
+
+    } catch (err) {
+        return res.status(500).json({
+            status: false,
+            code: 500,
+            msg: "",
+            data: {},
+            errors: { serverError: err },
+        });
+    }
+});
 //================================= create new maintenance for vehicle  =================================//
 const menValidationRules = [
-    body('vehicleID')
-        .custom((value, { req }) => {
-            if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
-
-                throw new Error("validation.vehicleIDNotExists");
-            }
-            return true;
-        }),
+    body('vehicleID').isNumeric().withMessage("validation.vehicleIDNotExists"),
     body('content')
         .custom((value, { req }) => {
             if (typeof value !== "string" || !isNaN(parseInt(value)) || value.length <= 3 || value.length >= 29) {
@@ -1218,7 +1582,6 @@ router6.post("/createmaintenance", menValidationRules, adminAuth, async (req, re
     }
 });
 //================================= get maintenance for vehicle by id =================================//
-
 router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) => {//completed
     try {
         const { id } = req.query
@@ -1271,7 +1634,6 @@ router6.get("/getmaintenance", menValidationRules, adminAuth, async (req, res) =
         });
     }
 });
-
 //==========================================  add promo and send ==========================================//
 router6.post("/addpromo", adminAuth, async (req, res) => {//incompleted
     try {
@@ -1376,7 +1738,7 @@ router6.post("/sendnotification", sendnotificationbody, adminAuth, async (req, r
 });
 // "noPromo": "there is no fqa to delete",
 //==========================================  get private trips  ==========================================//
-router6.get("/Bookprivate",adminAuth, async (req, res) => {//test
+router6.get("/Bookprivate",adminAuth, async (req, res) => {//completed
     try {
         const { page, limit } = req.query;
         if (!(Boolean(limit) && Boolean(page))) {

@@ -278,6 +278,17 @@ router3.get("/view", async (req, res) => {//completed
     try {
 
         const termsexists = await query("select * from nationalities");
+        await Promise.all(termsexists.map((e) => {
+            if (req.headers['accept-language'] = "ar") {
+                delete e.nationalityEN
+                e.nationality = e.nationalityAR;
+                delete e.nationalityAR
+            } else {
+                delete e.nationalityAR
+                e.nationality = e.nationalityEN;
+                delete e.nationalityEN
+            }
+        }))
         if (termsexists[0]) {
             return res.status(200).json({
                 status: true,
@@ -287,9 +298,10 @@ router3.get("/view", async (req, res) => {//completed
                 errors: {}
             });
         }
-        return res.status(200).json({
-            status: true,
-            code: 200,
+        
+        return res.status(400).json({
+            status: false,
+            code: 400,
             msg: req.t("error.nationalityNOTExistsINDB"),
             data: {},
             errors: {}

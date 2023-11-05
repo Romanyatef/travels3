@@ -22,7 +22,7 @@ const passValidationRules = [
         .withMessage("validation.passwordNotExists"),
 ];
 
-router2.post("/pass", userAuth, passValidationRules, async (req, res) => {
+router2.post("/pass", autherized, passValidationRules, async (req, res) => {
     //completed
     try {
         const errors = validationResult(req);
@@ -43,10 +43,10 @@ router2.post("/pass", userAuth, passValidationRules, async (req, res) => {
         }
 
         const { newPass } = req.body;
-        const user1 = res.locals.user;
+        const autherized = res.locals.autherized;
         await query("update users set password=? where id =? ", [
             await bcrypt.hash(newPass, 10),
-            user1.id,
+            autherized.id,
         ]);
         return res.status(200).json({
             status: true,
@@ -284,11 +284,13 @@ router2.post("/send", autherized, async (req, res) => {
 });
 //==========================================  delete profile   ==========================================//
 
-router2.delete("/deleteProfile", autherized, async (req, res) => {
+router2.delete("/deleteProfile",autherized, async (req, res) => {
     try {
         const autherized = res.locals.autherized;
         await query("delete from users where id = ? ", autherized.id);
+        if (!(autherized.profile_image == "1698773559374-37408851.jpeg")) {
         fs.unlinkSync("./upload/" + autherized.profile_image); //delete image
+        }
 
         return res.status(200).json({
             status: true,

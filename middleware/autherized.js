@@ -17,11 +17,13 @@ const autherized=async (req,res,next) => {
     const autherized =await query("select * from users where token = ?",token);
     if (autherized[0] && autherized[0].status == 1) {
         const host = req.get('host');
-        autherized[0].profile_image = `http://${host}/upload/${autherized[0].profile_image} `
+        // autherized[0].profile_image = `http://${host}/upload/${autherized[0].profile_image} `
         res.locals.autherized = autherized[0];
         next();
     }
-    else{
+    else {
+        console.log("hello2");
+
         return res.status(403).json({
             status: false,
             code: 403,
