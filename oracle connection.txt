@@ -1,0 +1,99 @@
+Yes, you can use the connection variable in other routes of your Node.js application. One way to achieve this is by creating a separate module that handles the database connection and exports the connection object for use in other routes.
+
+Here's an example of how you can structure your code to achieve this:
+
+db.js (database module)
+
+javascript
+Copy
+const oracledb = require('oracledb');
+require('dotenv').config();
+
+const dbConfig = {
+  user: process.env.USERNAME,
+  password: process.env.PASSWORD,
+  connectString: process.env.CONNECT_STRING,
+};
+
+let connection;
+
+async function connectToOracle() {
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    console.log('Connected to Oracle Database');
+  } catch (err) {
+    console.error('Error connecting to Oracle Database');
+    console.error(err);
+  }
+}
+
+async function closeConnection() {
+  try {
+    if (connection) {
+      await connection.close();
+      console.log('Connection closed');
+    }
+  } catch (err) {
+    console.error('Error closing connection');
+    console.error(err);
+  }
+}
+
+module.exports = {
+  connectToOracle,
+  closeConnection,
+  getConnection: () => connection,
+};
+In this module, the connectToOracle function establishes the connection to the Oracle database and assigns the connection object to the connection variable. The closeConnection function is responsible for closing the connection when needed. The getConnection function is exported to provide access to the connection object.
+
+To use the connection object in other routes, you need to call the connectToOracle function once to establish the connection. Then, you can require the db.js module in your route files and use the getConnection function to access the connection object.
+
+server.js (main server file)
+
+javascript
+Copy
+const express = require('express');
+const db = require('./db');
+
+const app = express();
+
+// Connect to Oracle database
+db.connectToOracle();
+
+// Define your routes
+// ...
+
+// Start the server
+app.listen(3000, () => {
+  console.log('Server started on port 3000');
+});
+exampleRoute.js (example route file)
+
+javascript
+Copy
+const express = require('express');
+const db = require('./db');
+
+const router = express.Router();
+
+router.get('/example', async (req, res) => {
+  try {
+    const connection = db.getConnection();
+
+    // Use the connection for database operations
+    // ...
+
+    res.json({ message: 'Database operation successful' });
+  } catch (err) {
+    console.error('Error performing database operation');
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+module.exports = router;
+In this example, the exampleRoute.js file requires the db.js module and uses the getConnection function to access the connection object. You can then perform your database operations within the route handler.
+
+Remember to adjust the file paths and route definitions according to your project structure and requirements.
+
+Additionally, make sure to handle closing the connection appropriately when your application shuts down or when it's no longer needed by calling db.closeConnection()
