@@ -1,0 +1,12 @@
+mkdir folder
+touch file.extention
+nano file.extention
+rm -r folder_name
+rm file.extention
+cp file.txt .env
+mysql -u root -p  password
+drop database travel
+create database travel
+source path without cotations 
+source ~/travel/travels3/travel.sql
+npm i
