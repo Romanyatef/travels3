@@ -10,3 +10,31 @@ create database travel
 source path without cotations 
 source ~/travel/travels3/travel.sql
 npm i
+
+
+
+
+Code Runner
+v0.12.1
+
+
+ESLint
+v2.4.4
+
+indent-rainbow
+
+JavaScript (ES6) code snippets
+
+Live Server
+
+Material Icon Theme
+
+Path Intellisense
+
+Prettier - Code formatter
+
+React Native Tools
+
+Reactjs code snippets
+
+Simple React Snippets
